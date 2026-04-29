@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habilidades Sociales 3D — Constelación de Conflictos</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+            "d3": "https://unpkg.com/d3@7.8.5/src/index.js",
+            "d3-selection": "https://unpkg.com/d3-selection@3.0.0/src/index.js",
+            "d3-zoom": "https://unpkg.com/d3-zoom@3.0.0/src/index.js",
+            "d3-drag": "https://unpkg.com/d3-drag@3.0.0/src/index.js",
+            "d3-dispatch": "https://unpkg.com/d3-dispatch@3.0.1/src/index.js",
+            "d3-interpolate": "https://unpkg.com/d3-interpolate@3.0.1/src/index.js",
+            "d3-transition": "https://unpkg.com/d3-transition@3.0.1/src/index.js",
+            "d3-color": "https://unpkg.com/d3-color@3.1.0/src/index.js",
+            "d3-ease": "https://unpkg.com/d3-ease@3.0.1/src/index.js",
+            "d3-timer": "https://unpkg.com/d3-timer@3.0.1/src/index.js"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Header -->
+    <div id="header">
+        <h1>Habilidades Sociales 3D</h1>
+        <div id="controls">
+            <button id="btn-connections" class="toggle-btn">Ver Conexiones</button>
+            <button id="btn-reset" class="control-btn">Reiniciar Vista</button>
+            <select id="filter-category">
+                <option value="all">Todas las categorías</option>
+                <option value="escenario">Escenarios de Conflicto</option>
+                <option value="habilidad">Habilidades Sociales</option>
+                <option value="emocion">Emociones</option>
+                <option value="estrategia">Estrategias</option>
+            </select>
+            <input type="text" id="search-node" placeholder="Buscar nodo...">
+        </div>
+    </div>
+
+    <!-- Panel de información del nodo -->
+    <div id="info-panel" class="hidden">
+        <button id="info-close">&times;</button>
+        <h3 id="info-title"></h3>
+        <p id="info-year"></p>
+        <p id="info-summary"></p>
+        <p id="info-category"></p>
+        <button id="btn-chat" class="chat-btn">Practicar con este personaje</button>
+    </div>
+
+    <!-- Panel de chat -->
+    <div id="chat-panel" class="hidden">
+        <div id="chat-header">
+            <img id="chat-avatar" src="" alt="">
+            <div>
+                <h3 id="chat-name"></h3>
+                <span id="chat-status">En sesión</span>
+            </div>
+            <button id="chat-close">&times;</button>
+        </div>
+        <div id="chat-messages"></div>
+        <div id="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Escribe tu respuesta...">
+            <button id="chat-send">Enviar</button>
+        </div>
+    </div>
+
+    <!-- Modal API Key -->
+    <div id="api-key-modal" class="modal">
+        <div class="modal-content">
+            <h3>Configurar API Key de Gemini</h3>
+            <p>Para practicar con los personajes de entrenamiento, necesitas una API key de Google AI Studio.</p>
+            <p>Obtén una gratis en: <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a></p>
+            <input type="password" id="api-key-input" placeholder="Ingresa tu API key de Gemini">
+            <div class="modal-buttons">
+                <button id="btn-save-key">Guardar y continuar</button>
+                <button id="btn-skip-key" class="secondary">Omitir (solo visualización)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leyenda -->
+    <div id="legend">
+        <h4>Categorías</h4>
+        <div class="legend-item"><span class="dot" style="background:#e74c3c"></span> Escenarios</div>
+        <div class="legend-item"><span class="dot" style="background:#3498db"></span> Habilidades</div>
+        <div class="legend-item"><span class="dot" style="background:#f39c12"></span> Emociones</div>
+        <div class="legend-item"><span class="dot" style="background:#2ecc71"></span> Estrategias</div>
+    </div>
+
+    <!-- Canvas 3D -->
+    <div id="canvas-container"></div>
+
+    <!-- Tooltip -->
+    <div id="tooltip" class="hidden"></div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
