@@ -9,7 +9,6 @@ export class LLMClient {
         this.baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models';
         this.conversationHistory = [];
         this.temperature = 0.7;
-        this.maxOutputTokens = 768;
     }
 
     /**
@@ -41,7 +40,7 @@ export class LLMClient {
             ],
             generationConfig: {
                 temperature: temp,
-                maxOutputTokens: this.maxOutputTokens,
+                maxOutputTokens: 1024,
                 topP: 0.9,
                 topK: 40
             }
@@ -121,7 +120,7 @@ export class LLMClient {
             }],
             generationConfig: {
                 temperature: temperature,
-                maxOutputTokens: this.maxOutputTokens,
+                maxOutputTokens: 192,
                 topP: 0.9
             }
         };
