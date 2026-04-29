@@ -74,7 +74,7 @@ class HistoricalConstellationsApp {
         window.addEventListener('resize', () => this.onResize());
     }
 
-    showApiKeyModal() {
+    showApiKeyModal(forceOpen = false) {
         const modal = document.getElementById('api-key-modal');
         const saveBtn = document.getElementById('btn-save-key');
         const skipBtn = document.getElementById('btn-skip-key');
@@ -82,7 +82,7 @@ class HistoricalConstellationsApp {
 
         // Verificar si ya hay una key guardada
         const savedKey = localStorage.getItem('gemini_api_key');
-        if (savedKey) {
+        if (savedKey && !forceOpen) {
             this.apiKey = savedKey;
             this.llm = new LLMClient(this.apiKey);
             modal.classList.add('hidden');
@@ -90,24 +90,28 @@ class HistoricalConstellationsApp {
         }
 
         modal.classList.remove('hidden');
+        input.style.borderColor = '';
+        input.value = this.apiKey || savedKey || '';
 
-        saveBtn.addEventListener('click', () => {
+        saveBtn.onclick = () => {
             const key = input.value.trim();
             if (key) {
                 this.apiKey = key;
                 this.llm = new LLMClient(this.apiKey);
                 localStorage.setItem('gemini_api_key', key);
                 modal.classList.add('hidden');
+                input.value = '';
             } else {
                 input.style.borderColor = '#e74c3c';
             }
-        });
+        };
 
-        skipBtn.addEventListener('click', () => {
+        skipBtn.onclick = () => {
             modal.classList.add('hidden');
             // Crear LLM sin API key (modo solo visualización)
+            this.apiKey = '';
             this.llm = new LLMClient('');
-        });
+        };
     }
 
     // ============================================
@@ -665,6 +669,11 @@ class HistoricalConstellationsApp {
             this.controls.target.set(0, 0, 0);
             this.controls.autoRotate = true;
             this.deselectNode();
+        });
+
+        // Botón para cambiar API key
+        document.getElementById('btn-change-key').addEventListener('click', () => {
+            this.showApiKeyModal(true);
         });
 
         // Filtro por categoría
