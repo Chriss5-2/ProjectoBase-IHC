@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Constelaciones Históricas 3D</title>
+    <title>Mapa de Stakeholders — App de Habilidades Sociales</title>
     <link rel="stylesheet" href="css/styles.css">
     <!-- Import maps para Three.js y D3.js -->
     <script type="importmap">
@@ -28,19 +28,18 @@
 <body>
     <!-- Barra de título y controles -->
     <div id="header">
-        <h1>Constelaciones Históricas 3D</h1>
+        <h1>App de Habilidades Sociales — Mapa de Stakeholders</h1>
         <div id="controls">
             <button id="btn-connections" class="toggle-btn">Ver Conexiones</button>
             <button id="btn-reset" class="control-btn">Reiniciar Vista</button>
             <select id="filter-category">
                 <option value="all">Todas las categorías</option>
-                <option value="ciencia">Ciencia</option>
-                <option value="arte">Arte</option>
-                <option value="filosofia">Filosofía</option>
-                <option value="politica">Política</option>
-                <option value="tecnologia">Tecnología</option>
+                <option value="usuario">Usuarios</option>
+                <option value="profesional">Profesionales</option>
+                <option value="educador">Educadores y Familia</option>
+                <option value="escenario">Escenarios de Conflicto</option>
             </select>
-            <input type="text" id="search-node" placeholder="Buscar personaje o año...">
+            <input type="text" id="search-node" placeholder="Buscar stakeholder...">
         </div>
     </div>
 
@@ -51,7 +50,7 @@
         <p id="info-year"></p>
         <p id="info-summary"></p>
         <p id="info-category"></p>
-        <button id="btn-chat" class="chat-btn">Conversar con este personaje</button>
+        <button id="btn-chat" class="chat-btn">Iniciar conversación</button>
     </div>
 
     <!-- Panel de chat con personaje -->
@@ -75,7 +74,7 @@
     <div id="api-key-modal" class="modal">
         <div class="modal-content">
             <h3>Configurar API Key de Gemini</h3>
-            <p>Para conversar con los personajes históricos, necesitas una API key de Google AI Studio.</p>
+            <p>Para conversar con los stakeholders y NPCs, necesitas una API key de Google AI Studio.</p>
             <p>Obtén una gratis en: <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a></p>
             <input type="password" id="api-key-input" placeholder="Ingresa tu API key">
             <div class="modal-buttons">
@@ -88,11 +87,10 @@
     <!-- Leyenda de categorías -->
     <div id="legend">
         <h4>Categorías</h4>
-        <div class="legend-item"><span class="dot" style="background:#3498db"></span> Ciencia</div>
-        <div class="legend-item"><span class="dot" style="background:#e74c3c"></span> Política</div>
-        <div class="legend-item"><span class="dot" style="background:#f39c12"></span> Arte</div>
-        <div class="legend-item"><span class="dot" style="background:#9b59b6"></span> Filosofía</div>
-        <div class="legend-item"><span class="dot" style="background:#2ecc71"></span> Tecnología</div>
+        <div class="legend-item"><span class="dot" style="background:#3498db"></span> Usuarios</div>
+        <div class="legend-item"><span class="dot" style="background:#e74c3c"></span> Profesionales</div>
+        <div class="legend-item"><span class="dot" style="background:#f39c12"></span> Educadores y Familia</div>
+        <div class="legend-item"><span class="dot" style="background:#9b59b6"></span> Escenarios de Conflicto</div>
     </div>
 
     <!-- Contenedor del canvas 3D -->
