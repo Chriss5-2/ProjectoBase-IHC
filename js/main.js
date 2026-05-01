@@ -23,11 +23,10 @@ const CONFIG = {
         initialPos: [0, 20, 80]
     },
     colors: {
-        ciencia: 0x3498db,
-        politica: 0xe74c3c,
-        arte: 0xf39c12,
-        filosofia: 0x9b59b6,
-        tecnologia: 0x2ecc71,
+        usuario: 0x3498db,
+        profesional: 0xe74c3c,
+        educador: 0xf39c12,
+        escenario: 0x9b59b6,
         default: 0xffffff,
         connection: 0x88ccff,
         background: 0x0a0e27
@@ -268,7 +267,7 @@ class HistoricalConstellationsApp {
     }
 
     categoryIndex(category) {
-        const categories = ['ciencia', 'filosofia', 'arte', 'politica', 'tecnologia'];
+        const categories = ['usuario', 'profesional', 'educador', 'escenario'];
         return Math.max(0, categories.indexOf(category));
     }
 
