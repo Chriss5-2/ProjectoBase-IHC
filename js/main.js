@@ -23,11 +23,10 @@ const CONFIG = {
         initialPos: [0, 20, 80]
     },
     colors: {
-        ciencia: 0x3498db,
-        politica: 0xe74c3c,
-        arte: 0xf39c12,
-        filosofia: 0x9b59b6,
-        tecnologia: 0x2ecc71,
+        usuario: 0x3498db,
+        profesional: 0xe74c3c,
+        educador: 0xf39c12,
+        escenario: 0x9b59b6,
         default: 0xffffff,
         connection: 0x88ccff,
         background: 0x0a0e27
@@ -42,7 +41,6 @@ class HistoricalConstellationsApp {
         this.apiKey = null;
         this.llm = null;
         this.currentCharacter = null;
-        this.selectedCharacterData = null;
         this.scene = null;
         this.camera = null;
         this.renderer = null;
@@ -74,7 +72,7 @@ class HistoricalConstellationsApp {
         window.addEventListener('resize', () => this.onResize());
     }
 
-    showApiKeyModal(forceOpen = false) {
+    showApiKeyModal() {
         const modal = document.getElementById('api-key-modal');
         const saveBtn = document.getElementById('btn-save-key');
         const skipBtn = document.getElementById('btn-skip-key');
@@ -82,36 +80,38 @@ class HistoricalConstellationsApp {
 
         // Verificar si ya hay una key guardada
         const savedKey = localStorage.getItem('gemini_api_key');
-        if (savedKey && !forceOpen) {
+        if (savedKey) {
             this.apiKey = savedKey;
             this.llm = new LLMClient(this.apiKey);
+            console.log('Loaded API key from localStorage');
             modal.classList.add('hidden');
             return;
         }
 
+        console.log('No API key found in localStorage, showing modal');
         modal.classList.remove('hidden');
-        input.style.borderColor = '';
-        input.value = this.apiKey || savedKey || '';
 
-        saveBtn.onclick = () => {
+        saveBtn.addEventListener('click', () => {
             const key = input.value.trim();
             if (key) {
                 this.apiKey = key;
                 this.llm = new LLMClient(this.apiKey);
                 localStorage.setItem('gemini_api_key', key);
+                console.log('API key saved and LLM initialized');
                 modal.classList.add('hidden');
-                input.value = '';
             } else {
+                console.warn('API key input is empty');
                 input.style.borderColor = '#e74c3c';
             }
-        };
+        });
 
-        skipBtn.onclick = () => {
+        skipBtn.addEventListener('click', () => {
+            console.log('User skipped API key configuration (chat will not work)');
             modal.classList.add('hidden');
             // Crear LLM sin API key (modo solo visualización)
-            this.apiKey = '';
             this.llm = new LLMClient('');
-        };
+            // Importante: no establecer this.apiKey, así el chat mostrará un mensaje
+        });
     }
 
     // ============================================
@@ -267,7 +267,7 @@ class HistoricalConstellationsApp {
     }
 
     categoryIndex(category) {
-        const categories = ['ciencia', 'filosofia', 'arte', 'politica', 'tecnologia'];
+        const categories = ['usuario', 'profesional', 'educador', 'escenario'];
         return Math.max(0, categories.indexOf(category));
     }
 
@@ -488,40 +488,54 @@ class HistoricalConstellationsApp {
         const tooltip = document.getElementById('tooltip');
 
         if (intersects.length > 0) {
-            // Obtener el nodo principal (no los objetos hijos como glow, ring, label)
-            let node = intersects[0].object;
-            while (node.parent && !this.nodes.includes(node)) {
-                node = node.parent;
+            // Buscar el nodo principal (el que está en this.nodes)
+            let node = null;
+            for (let intersection of intersects) {
+                if (this.nodes.includes(intersection.object)) {
+                    node = intersection.object;
+                    break;
+                }
+                // Si es un child, buscar el padre que está en this.nodes
+                if (intersection.object.parent && this.nodes.includes(intersection.object.parent)) {
+                    node = intersection.object.parent;
+                    break;
+                }
             }
-            const data = node.userData;
 
-            // Validar que data existe y tiene propiedades
-            if (!data || !data.nombre || !data.resumen) {
+            if (node && node.userData) {
+                const data = node.userData;
+
+                // Validar que los datos necesarios existan
+                if (!data.nombre || !data.año || !data.resumen) {
+                    console.warn('Incomplete node data:', data);
+                    tooltip.classList.add('hidden');
+                    return;
+                }
+
+                // Hover effect
+                if (this.hoveredNode !== node) {
+                    this.unhoverNode();
+                    this.hoverNode(node);
+                    this.hoveredNode = node;
+                }
+
+                // Tooltip
+                tooltip.classList.remove('hidden');
+                tooltip.innerHTML = `
+                    <div class="tooltip-name">${data.nombre}</div>
+                    <div class="tooltip-year">${data.año}</div>
+                    <div class="tooltip-summary">${data.resumen.substring(0, 100)}...</div>
+                `;
+                tooltip.style.left = (event.clientX + 15) + 'px';
+                tooltip.style.top = (event.clientY + 15) + 'px';
+
+                this.renderer.domElement.style.cursor = 'pointer';
+            } else {
                 this.unhoverNode();
                 this.hoveredNode = null;
                 tooltip.classList.add('hidden');
                 this.renderer.domElement.style.cursor = 'default';
-                return;
             }
-
-            // Hover effect
-            if (this.hoveredNode !== node) {
-                this.unhoverNode();
-                this.hoverNode(node);
-                this.hoveredNode = node;
-            }
-
-            // Tooltip
-            tooltip.classList.remove('hidden');
-            tooltip.innerHTML = `
-                <div class="tooltip-name">${data.nombre}</div>
-                <div class="tooltip-year">${data.año}</div>
-                <div class="tooltip-summary">${data.resumen.substring(0, 100)}...</div>
-            `;
-            tooltip.style.left = (event.clientX + 15) + 'px';
-            tooltip.style.top = (event.clientY + 15) + 'px';
-
-            this.renderer.domElement.style.cursor = 'pointer';
         } else {
             this.unhoverNode();
             this.hoveredNode = null;
@@ -571,25 +585,41 @@ class HistoricalConstellationsApp {
         const intersects = this.raycaster.intersectObjects(this.nodes, true);
 
         if (intersects.length > 0) {
-            // Obtener el nodo principal (no los objetos hijos como glow, ring, label)
-            let selectedNode = intersects[0].object;
-            while (selectedNode.parent && !this.nodes.includes(selectedNode)) {
-                selectedNode = selectedNode.parent;
+            // Buscar el nodo principal (el que está en this.nodes)
+            let selectedNode = null;
+            for (let intersection of intersects) {
+                if (this.nodes.includes(intersection.object)) {
+                    selectedNode = intersection.object;
+                    break;
+                }
+                // Si es un child, buscar el padre que está en this.nodes
+                if (intersection.object.parent && this.nodes.includes(intersection.object.parent)) {
+                    selectedNode = intersection.object.parent;
+                    break;
+                }
             }
-            this.selectNode(selectedNode);
+
+            if (selectedNode && selectedNode.userData) {
+                console.log('Selected node:', selectedNode.userData.nombre);
+                this.selectNode(selectedNode);
+            }
         } else {
             this.deselectNode();
         }
     }
 
     selectNode(node) {
+        if (!node || !node.userData) {
+            console.error('Invalid node:', node);
+            return;
+        }
+
         this.selectedNode = node;
         const data = node.userData;
 
-        // Validar que los datos existan
-        if (!data || !data.nombre || !data.año || !data.categoria) {
-            console.error('Datos de nodo incompletos:', data);
-            this.deselectNode();
+        // Validar que los datos necesarios existan
+        if (!data.nombre || !data.año || !data.categoria) {
+            console.error('Incomplete node data:', data);
             return;
         }
 
@@ -609,11 +639,19 @@ class HistoricalConstellationsApp {
         // Configurar botón de chat
         const chatBtn = document.getElementById('btn-chat');
         if (data.prompt_personaje) {
-            this.selectedCharacterData = data;
             chatBtn.style.display = 'block';
+            // Remover listeners anteriores
+            const newChatBtn = chatBtn.cloneNode(true);
+            chatBtn.parentNode.replaceChild(newChatBtn, chatBtn);
+            
+            // Agregar nuevo listener
+            const newBtn = document.getElementById('btn-chat');
+            newBtn.addEventListener('click', () => {
+                console.log('Chat button clicked for:', data.nombre);
+                this.openChat(data);
+            });
         } else {
             chatBtn.style.display = 'none';
-            this.selectedCharacterData = null;
         }
 
         // Animar cámara hacia el nodo
@@ -622,7 +660,6 @@ class HistoricalConstellationsApp {
 
     deselectNode() {
         this.selectedNode = null;
-        this.selectedCharacterData = null;
         document.getElementById('info-panel').classList.add('hidden');
     }
 
@@ -671,11 +708,6 @@ class HistoricalConstellationsApp {
             this.deselectNode();
         });
 
-        // Botón para cambiar API key
-        document.getElementById('btn-change-key').addEventListener('click', () => {
-            this.showApiKeyModal(true);
-        });
-
         // Filtro por categoría
         document.getElementById('filter-category').addEventListener('change', (e) => {
             this.filterByCategory(e.target.value);
@@ -703,13 +735,6 @@ class HistoricalConstellationsApp {
 
         document.getElementById('chat-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.sendChatMessage();
-        });
-
-        // Botón de chat con personaje
-        document.getElementById('btn-chat').addEventListener('click', () => {
-            if (this.selectedCharacterData) {
-                this.openChat(this.selectedCharacterData);
-            }
         });
     }
 
@@ -762,50 +787,73 @@ class HistoricalConstellationsApp {
     // SISTEMA DE CHAT CON PERSONAJES
     // ============================================
     openChat(characterData) {
-        if (!this.llm || !this.apiKey) {
-            alert('Configure su API key de Gemini para usar el chat. Recargue la página e ingrese su key.');
+        console.log('openChat called with:', characterData?.nombre);
+        console.log('API Key exists:', !!this.apiKey);
+        console.log('LLM instance exists:', !!this.llm);
+
+        if (!this.apiKey) {
+            const message = 'Para usar el chat necesitas una API key de Google Gemini.\n\n' +
+                          '1. Recarga la página\n' +
+                          '2. Obtén una API key gratis en: https://aistudio.google.com/app/apikey\n' +
+                          '3. Ingresa la key en el formulario que aparecerá';
+            alert(message);
             return;
         }
 
-        this.currentCharacter = characterData;
-        this.llm.clearHistory();
+        if (!this.llm) {
+            alert('Error: LLM no está inicializado. Recarga la página.');
+            return;
+        }
 
-        const chatPanel = document.getElementById('chat-panel');
-        const avatar = document.getElementById('chat-avatar');
-        const name = document.getElementById('chat-name');
-        const messages = document.getElementById('chat-messages');
+        try {
+            this.currentCharacter = characterData;
+            this.currentCharacterPrompt = `${characterData.prompt_personaje}\n\nINSTRUCCIÓN DE LONGITUD: responde de forma breve, con 2 a 4 frases como máximo. Evita párrafos largos y listas extensas.`;
+            this.llm.clearHistory();
 
-        avatar.src = characterData.avatar;
-        avatar.alt = characterData.nombre;
-        name.textContent = `${characterData.nombre} (${characterData.año})`;
+            const chatPanel = document.getElementById('chat-panel');
+            const avatar = document.getElementById('chat-avatar');
+            const name = document.getElementById('chat-name');
+            const messages = document.getElementById('chat-messages');
 
-        messages.innerHTML = '';
-        this.addMessage('system', `Estás conversando con **${characterData.nombre}**. ${characterData.resumen}`);
+            avatar.src = characterData.avatar;
+            avatar.alt = characterData.nombre;
+            name.textContent = `${characterData.nombre} (${characterData.año})`;
 
-        chatPanel.classList.remove('hidden');
+            messages.innerHTML = '';
+            this.addMessage('system', `Estás conversando con **${characterData.nombre}**. ${characterData.resumen}`);
 
-        // Mensaje de bienvenida del personaje
-        this.addMessage('loading', 'El personaje está preparándose...');
-        this.llm.chatOneShot(
-            "Preséntate brevemente (máximo 2 oraciones) a quien te visita desde el futuro.",
-            characterData.prompt_personaje,
-            0.7
-        ).then(response => {
-            const loading = messages.querySelector('.loading');
-            if (loading) loading.remove();
-            this.addMessage('character', response);
-        }).catch(err => {
-            const loading = messages.querySelector('.loading');
-            if (loading) loading.remove();
-            this.addMessage('error', `Error: ${err.message}`);
-        });
+            chatPanel.classList.remove('hidden');
+
+            // Mensaje de bienvenida del personaje
+            this.addMessage('loading', 'El personaje está preparándose...');
+            this.llm.chatOneShot(
+                "Preséntate brevemente (máximo 2 oraciones) a quien te visita desde el futuro.",
+                this.currentCharacterPrompt,
+                0.7
+            ).then(response => {
+                const loading = messages.querySelector('.loading');
+                if (loading) loading.remove();
+                this.addMessage('character', response);
+            }).catch(err => {
+                console.error('Error in chatOneShot:', err);
+                const loading = messages.querySelector('.loading');
+                if (loading) loading.remove();
+                this.addMessage('error', `Error: ${err.message}`);
+            });
+        } catch (error) {
+            console.error('Error in openChat:', error);
+            alert('Error al abrir el chat: ' + error.message);
+        }
     }
 
     async sendChatMessage() {
         const input = document.getElementById('chat-input');
         const text = input.value.trim();
 
-        if (!text || !this.currentCharacter) return;
+        if (!text || !this.currentCharacter) {
+            console.warn('sendChatMessage: missing text or currentCharacter');
+            return;
+        }
 
         // Mostrar mensaje del usuario
         this.addMessage('user', text);
@@ -817,7 +865,7 @@ class HistoricalConstellationsApp {
         try {
             const response = await this.llm.chat(
                 text,
-                this.currentCharacter.prompt_personaje
+                this.currentCharacterPrompt || this.currentCharacter.prompt_personaje
             );
 
             // Reemplazar indicador con respuesta
@@ -826,10 +874,11 @@ class HistoricalConstellationsApp {
 
             this.addMessage('character', response);
         } catch (error) {
+            console.error('Error in sendChatMessage:', error);
             const loading = document.querySelector('#chat-messages .loading');
             if (loading) loading.remove();
 
-            this.addMessage('error', `Error: ${error.message}. Verifique su conexión y API key.`);
+            this.addMessage('error', `Error: ${error.message}`);
         }
     }
 
