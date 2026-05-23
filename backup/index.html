@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panda AI Emotions</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="main-layout">
+        
+        <!-- SECCIÓN DE LA CÁMARA (NUEVA) -->
+        <div class="camera-section">
+            <h2>Tu Cámara (IA Face)</h2>
+            <div class="video-container">
+                <img id="videoStream" src="" alt="Cámara apagada" />
+            </div>
+            <button class="btn-start" id="startBtn" onclick="startCamera()">Activar IA Emocional</button>
+            <p class="status-msg">Emoción detectada: <strong id="statusText">ninguna</strong></p>
+        </div>
+
+        <!-- SECCIÓN DEL PANDA (EXISTENTE) -->
+        <div class="container">
+            <h2>Panda Emotions</h2>
+            <div class="panda" id="panda" data-emotion="neutral">
+                <!-- Orejas -->
+                <div class="ear left"><div class="inner"></div></div>
+                <div class="ear right"><div class="inner"></div></div>
+                
+                <div class="head">
+                    <!-- Ojos (Manchas negras) -->
+                    <div class="eye left">
+                        <div class="pupil"></div>
+                    </div>
+                    <div class="eye right">
+                        <div class="pupil"></div>
+                    </div>
+                    
+                    <!-- Rubor -->
+                    <div class="blush left"></div>
+                    <div class="blush right"></div>
+                    
+                    <!-- Nariz y Boca -->
+                    <div class="nose"></div>
+                    <div class="mouth"></div>
+                    
+                    <!-- Lágrimas -->
+                    <div class="tear left"></div>
+                    <div class="tear right"></div>
+                </div>
+                
+                <div class="neck"></div>
+            </div>
+
+            <!-- Mantenemos los botones como respaldo manual -->
+            <div class="controls">
+                <button onclick="setEmotion('neutral')">Neutral</button>
+                <button onclick="setEmotion('happy')">Happy</button>
+                <button onclick="setEmotion('sad')">Sad</button>
+                <button onclick="setEmotion('angry')">Angry</button>
+                <button onclick="setEmotion('fear')">Fear</button>
+                <button onclick="setEmotion('surprise')">Surprise</button>
+                <button onclick="setEmotion('disgust')">Disgust</button>
+            </div>
+        </div>
+
+    </div> <!-- Fin de main-layout -->
+
+    <script>
+        // Función original de cambios manuales
+        function setEmotion(emotion) {
+            document.getElementById('panda').setAttribute('data-emotion', emotion);
+        }
+
+        // --- NUEVA LÓGICA PARA LEER LA CÁMARA E IA --- //
+        let pollingInterval = null;
+
+        function startCamera() {
+            // 1. Cargamos el stream de video de Flask
+            const videoStream = document.getElementById('videoStream');
+            videoStream.src = '/video_feed'; // Llama a Flask
+            
+            // 2. Cambiamos el estado del botón
+            const btn = document.getElementById('startBtn');
+            btn.innerText = "Cámara y IA Activas";
+            btn.style.background = "#28a745"; // verde de encendido
+            btn.disabled = true;
+
+            // 3. Empezamos a preguntarle al servidor qué emoción detectó cada 500ms
+            if (!pollingInterval) {
+                pollingInterval = setInterval(fetchEmotion, 500);
+            }
+        }
+
+        async function fetchEmotion() {
+            try {
+                const response = await fetch('/get_emotion');
+                const data = await response.json();
+                
+                // Actualizamos el texto en pantalla
+                document.getElementById('statusText').innerText = data.emotion;
+                
+                // Actualizamos el panda si la emoción es válida
+                const validEmotions = ['neutral', 'happy', 'sad', 'angry', 'fear', 'surprise', 'disgust'];
+                if(validEmotions.includes(data.emotion)) {
+                    setEmotion(data.emotion);
+                }
+            } catch (err) {
+                console.error("Error consultando emoción: ", err);
+            }
+        }
+    </script>
+</body>
+</html>

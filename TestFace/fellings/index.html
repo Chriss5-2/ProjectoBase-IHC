@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panda AI Emotions</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="main-layout">
+        
+        <!-- SECCIÓN DE LA CÁMARA (NUEVA) -->
+        <div class="camera-section">
+            <h2>Tu Cámara (IA Face)</h2>
+            <div class="video-container">
+                <img id="videoStream" src="" alt="Cámara apagada" />
+            </div>
+            <div class="camera-buttons">
+                <button class="btn-start" id="startBtn" onclick="startCamera()">Activar IA Emocional</button>
+                <button class="btn-stop" id="stopBtn" onclick="stopCamera()" style="display: none;">Detener IA</button>
+            </div>
+            <p class="status-msg">Emoción detectada: <strong id="statusText">ninguna</strong></p>
+        </div>
+
+        <!-- SECCIÓN DEL PANDA (EXISTENTE) -->
+        <div class="container">
+            <h2>Panda Emotions</h2>
+            <div class="panda" id="panda" data-emotion="neutral">
+                <!-- Orejas -->
+                <div class="ear left"><div class="inner"></div></div>
+                <div class="ear right"><div class="inner"></div></div>
+                
+                <div class="head">
+                    <!-- Ojos (Manchas negras) -->
+                    <div class="eye left">
+                        <div class="pupil"></div>
+                    </div>
+                    <div class="eye right">
+                        <div class="pupil"></div>
+                    </div>
+                    
+                    <!-- Rubor -->
+                    <div class="blush left"></div>
+                    <div class="blush right"></div>
+                    
+                    <!-- Nariz y Boca -->
+                    <div class="nose"></div>
+                    <div class="mouth"></div>
+                    
+                    <!-- Lágrimas -->
+                    <div class="tear left"></div>
+                    <div class="tear right"></div>
+                </div>
+                
+                <div class="neck"></div>
+            </div>
+
+            <!-- Mantenemos los botones como respaldo manual -->
+            <div class="controls">
+                <button onclick="setEmotion('neutral')">Neutral</button>
+                <button onclick="setEmotion('happy')">Happy</button>
+                <button onclick="setEmotion('sad')">Sad</button>
+                <button onclick="setEmotion('angry')">Angry</button>
+                <button onclick="setEmotion('fear')">Fear</button>
+                <button onclick="setEmotion('surprise')">Surprise</button>
+                <button onclick="setEmotion('disgust')">Disgust</button>
+            </div>
+        </div>
+
+    </div> <!-- Fin de main-layout -->
+
+    <script>
+        // Función original de cambios manuales
+        function setEmotion(emotion) {
+            document.getElementById('panda').setAttribute('data-emotion', emotion);
+        }
+
+        // --- NUEVA LÓGICA PARA LEER LA CÁMARA E IA --- //
+        let pollingInterval = null;
+
+        // Ejecutar polling muy rápido para un movimiento fluido (100ms)
+        function startCamera() {
+            const videoStream = document.getElementById('videoStream');
+            videoStream.src = '/video_feed';
+            
+            const btn = document.getElementById('startBtn');
+            btn.style.display = "none";
+
+            const stopBtn = document.getElementById('stopBtn');
+            stopBtn.style.display = "inline-block";
+
+            if (!pollingInterval) {
+                // Lo bajamos a 100ms para rastrear el rostro fluidamente
+                pollingInterval = setInterval(fetchEmotion, 100);
+            }
+        }
+
+        async function stopCamera() {
+            // 1. Detenemos el polling en JS
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+            
+            // 2. Le avisamos a Flask que apague la cámara real
+            await fetch('/stop_camera');
+            
+            // 3. Limpiamos la imagen y botones
+            document.getElementById('videoStream').src = "";
+            document.getElementById('startBtn').style.display = "inline-block";
+            document.getElementById('stopBtn').style.display = "none";
+            document.getElementById('statusText').innerText = "apagada";
+            
+            // 4. Reseteamos el panda al centro
+            setEmotion('neutral');
+            const panda = document.getElementById('panda');
+            panda.style.setProperty('--rot-y', `0deg`);
+            panda.style.setProperty('--rot-x', `0deg`);
+        }
+
+        async function fetchEmotion() {
+            try {
+                // Ahora consultamos la emoción y la posición al mismo tiempo
+                const response = await fetch('/get_state');
+                const data = await response.json();
+                
+                // 1. Actualizamos texto de emoción
+                document.getElementById('statusText').innerText = data.emotion;
+                
+                // 2. Actualizamos emoción del Panda
+                const validEmotions = ['neutral', 'happy', 'sad', 'angry', 'fear', 'surprise', 'disgust'];
+                if(validEmotions.includes(data.emotion)) {
+                    setEmotion(data.emotion);
+                }
+
+                // 3. Mapeamos la posición de la cámara (0-100) a rotación 3D en GRADOS
+                // Si movemos a la derecha (X mayor a 50), el rotY será positivo (gira a la derecha)
+                // Si bajamos (Y mayor a 50), el rotX será negativo (mira hacia abajo)
+                const rotY = (data.coords.x - 50) * 1.5; 
+                const rotX = -(data.coords.y - 50) * 1.2; 
+
+                // APLICAMOS LA ROTACIÓN 3D AL CONTENEDOR RAIZ DEL PANDA
+                const panda = document.getElementById('panda');
+                panda.style.setProperty('--rot-y', `${rotY}deg`);
+                panda.style.setProperty('--rot-x', `${rotX}deg`);
+
+            } catch (err) {
+                console.error("Error consultando estado: ", err);
+            }
+        }
+    </script>
+</body>
+</html>
