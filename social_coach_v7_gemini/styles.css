@@ -1,4 +1,4 @@
-/* Global Variables & Resets */
+﻿/* Global Variables & Resets */
 :root {
   --primary: #375673; 
   --primary-light: #4A7399;
@@ -50,7 +50,7 @@ body { background-color: var(--bg-color); color: var(--text-main); overflow: hid
 .btn-icon { background: none; border: none; font-size: 24px; color: var(--primary); cursor: pointer; padding: 8px; border-radius: 50%; }
 .btn-icon:hover { background: #e2e8f0; }
 
-/* Botones de Control de Simulación */
+/* Botones de Control de SimulaciÃ³n */
 .simulation-controls-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -92,7 +92,7 @@ body { background-color: var(--bg-color); color: var(--text-main); overflow: hid
 .btn-perdiste.pressed-active { background-color: #b91c1c !important; color: white !important; border-color: #b91c1c !important; }
 .btn-stop.pressed-active { background-color: #475569 !important; color: white !important; border-color: #475569 !important; }
 
-/* Notificación flotante (Toast) */
+/* NotificaciÃ³n flotante (Toast) */
 .sim-toast { width: 100%; padding: 16px; border-radius: 12px; font-size: 15px; font-weight: 600; margin-bottom: 20px; animation: slideDown 0.3s ease-out; text-align: center; }
 .toast-success { background-color: #d1fae5; color: #065f46; border: 1px solid #10b981; }
 .toast-danger { background-color: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
@@ -118,17 +118,17 @@ body { background-color: var(--bg-color); color: var(--text-main); overflow: hid
       width: 250px;
       height: 250px;
       margin: 0 auto 40px;
-      /* Al aplicarle aquí la rotación al contenedor entero, todo el cuerpo tiene volumen 3D integrado */
+      /* Al aplicarle aquÃ­ la rotaciÃ³n al contenedor entero, todo el cuerpo tiene volumen 3D integrado */
       transform: rotateY(var(--rot-y, 0deg)) rotateX(var(--rot-x, 0deg));
       transform-style: preserve-3d;
       transition: transform 0.15s ease-out;
   }
   
   /* 
-   * LA MAGIA DE LA TRANSICIÓN 
+   * LA MAGIA DE LA TRANSICIÃ“N 
    * Esto resuelve el problema de las "42 combinatorias". 
-   * En lugar de programar cada animación de A -> B, 
-   * CSS interpola automáticamente de CUALQUIER estado a CUALQUIER otro de forma suave.
+   * En lugar de programar cada animaciÃ³n de A -> B, 
+   * CSS interpola automÃ¡ticamente de CUALQUIER estado a CUALQUIER otro de forma suave.
    */
   .panda * {
       transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
@@ -249,7 +249,7 @@ body { background-color: var(--bg-color); color: var(--text-main); overflow: hid
       background: transparent;
   }
   
-  /* Lágrimas */
+  /* LÃ¡grimas */
   .tear {
       position: absolute;
       width: 10px;
@@ -336,7 +336,7 @@ body { background-color: var(--bg-color); color: var(--text-main); overflow: hid
   /* 2. Sad (Triste) - Llorando a gritos (Como el Emoji) */
   [data-emotion="sad"] .head { 
       transform: translateY(15px); 
-      background: radial-gradient(circle at 30% 30%, #e1f5fe, #b3e5fc); /* Tono azulado frío y depresivo */
+      background: radial-gradient(circle at 30% 30%, #e1f5fe, #b3e5fc); /* Tono azulado frÃ­o y depresivo */
       animation: sobbingFace 0.35s infinite alternate ease-in-out; 
   }
   [data-emotion="sad"] .ear.left { transform: rotate(-60deg) translate(-20px, 20px); }
@@ -355,7 +355,7 @@ body { background-color: var(--bg-color); color: var(--text-main); overflow: hid
   [data-emotion="sad"] .eye.left { transform: rotate(35deg); left: 30px; }
   [data-emotion="sad"] .eye.right { transform: rotate(-35deg); right: 30px; }
   
-  /* Ocultamos las pupilas porque los ojos están cerrados apretados */
+  /* Ocultamos las pupilas porque los ojos estÃ¡n cerrados apretados */
   [data-emotion="sad"] .pupil { opacity: 0; }
   
   /* Boca abierta en forma de frijol/grito, oscura por dentro y con lengua */
@@ -379,14 +379,14 @@ body { background-color: var(--bg-color); color: var(--text-main); overflow: hid
   }
   [data-emotion="sad"] .tear.left { 
       left: 8px; 
-      /* Curva drástica hacia la izquierda fluyendo por la mejilla */
+      /* Curva drÃ¡stica hacia la izquierda fluyendo por la mejilla */
       border-radius: 90% 0px 50% 60% / 60% 0px 40% 40%;
       transform: rotate(25deg) skewX(-15deg);
       box-shadow: inset 8px -5px 15px rgba(255,255,255,0.8), -10px 25px 0 -8px #81d4fa;
   }
   [data-emotion="sad"] .tear.right { 
       right: 8px; 
-      /* Curva drástica hacia la derecha fluyendo por la mejilla */
+      /* Curva drÃ¡stica hacia la derecha fluyendo por la mejilla */
       border-radius: 0px 90% 60% 50% / 0px 60% 40% 40%;
       transform: rotate(-25deg) skewX(15deg);
       box-shadow: inset -8px -5px 15px rgba(255,255,255,0.8), 10px 25px 0 -8px #81d4fa;
@@ -404,7 +404,7 @@ body { background-color: var(--bg-color); color: var(--text-main); overflow: hid
   [data-emotion="angry"] .ear { background: #8e0000; border-color: #4a0000; }
   [data-emotion="angry"] .neck { background: #8e0000; }
   
-  /* Ojos gigantes con ceño fruncido rojo oscuro */
+  /* Ojos gigantes con ceÃ±o fruncido rojo oscuro */
   [data-emotion="angry"] .eye { 
       height: 60px; 
       width: 45px;
@@ -444,7 +444,7 @@ body { background-color: var(--bg-color); color: var(--text-main); overflow: hid
       transform: rotate(45deg); /* Brillo afilado de comic agresivo */
   }
   
-  /* Boca enseñando los dientes apretados con rabia */
+  /* Boca enseÃ±ando los dientes apretados con rabia */
   [data-emotion="angry"] .mouth { 
       top: 130px; 
       left: 55px; 
@@ -507,7 +507,7 @@ body { background-color: var(--bg-color); color: var(--text-main); overflow: hid
   
   /* 6. Disgust (Disgusto) - Exagerado */
   [data-emotion="disgust"] .head { 
-      background: radial-gradient(circle at 40% 40%, #e8f5e9, #66bb6a); /* Verde musgo de náuseas */
+      background: radial-gradient(circle at 40% 40%, #e8f5e9, #66bb6a); /* Verde musgo de nÃ¡useas */
   }
   [data-emotion="disgust"] .ear { background: #388e3c; border-color: #1b5e20; }
   [data-emotion="disgust"] .neck { background: #388e3c; }
@@ -525,26 +525,26 @@ body { background-color: var(--bg-color); color: var(--text-main); overflow: hid
   }
   [data-emotion="disgust"] .blush { background: #33691e; opacity: 0.5; }
   
-  /* Animación para los chorros de lágrimas estilo cascada en "sad" exagerado */
+  /* AnimaciÃ³n para los chorros de lÃ¡grimas estilo cascada en "sad" exagerado */
   @keyframes floodTears {
       0% { transform: scaleY(1) translateY(0); opacity: 0.8; }
       50% { transform: scaleY(1.08) translateY(2px); opacity: 1; }
       100% { transform: scaleY(1) translateY(0); opacity: 0.8; }
   }
   
-  /* Animación para el sollozo de la cara en "sad" */
+  /* AnimaciÃ³n para el sollozo de la cara en "sad" */
   @keyframes sobbingFace {
       0% { transform: translateY(15px) scaleY(1) scaleX(1); }
       100% { transform: translateY(22px) scaleY(0.96) scaleX(1.02); }
   }
   
-  /* Animación saltarina de felicidad extrema */
+  /* AnimaciÃ³n saltarina de felicidad extrema */
   @keyframes happyBounce {
       0% { transform: translateY(-10px) scale(1.02); }
       100% { transform: translateY(0px) scale(0.98); }
   }
   
-  /* Animación para sacudida de "fear" exagerado */
+  /* AnimaciÃ³n para sacudida de "fear" exagerado */
   @keyframes shakeExaggerated {
       0% { transform: translate(2px, 1px) rotate(0deg); }
       10% { transform: translate(-1px, -2px) rotate(-1deg); }
@@ -602,7 +602,7 @@ body { background-color: var(--bg-color); color: var(--text-main); overflow: hid
     background: #deb887; /* Marron claro */
     border: 5px solid #5c3a21; border-radius: 50% 50% 40% 40%; z-index: 10;
 }
-/* Orejas grandes ca�das para el perro */
+/* Orejas grandes caï¿½das para el perro */
 .dog .ear {
     position: absolute; top: 20px; width: 80px; height: 110px;
     background: #8b4513; border: 5px solid #5c3a21;
@@ -652,43 +652,38 @@ body { background-color: var(--bg-color); color: var(--text-main); overflow: hid
 /* =========================================
    CONFIGURAIONES (DARK THEME, SIZES)
    ========================================= */
-body.dark-theme {
-    --bg-page: #1e1e2f;
-    --bg-card: #2a2a3c;
-    --text-color: #e2e8f0;
-    --border-color: #334155;
-    background-color: var(--bg-page);
-    color: var(--text-color);
-}
-body.dark-theme .app-sidebar {
-    background-color: var(--bg-card);
-    border-right-color: var(--border-color);
-}
-body.dark-theme .app-header {
-    background-color: var(--bg-card);
-    border-bottom-color: var(--border-color);
-}
+body.dark-theme { --bg-page: #0f172a; --bg-card: #1e293b; --text-color: #e0f2fe; --border-color: #334155; background-color: var(--bg-page) !important; color: var(--text-color) !important; }
+body.dark-theme .app-content { background-color: var(--bg-page) !important; color: var(--text-color) !important; }
+body.dark-theme .app-nav { background-color: var(--bg-card) !important; border-right-color: var(--border-color) !important; }
+body.dark-theme .app-header { background-color: var(--bg-card) !important; border-bottom-color: var(--border-color) !important; }
+body.dark-theme .desktop-centered-card, body.dark-theme .card, body.dark-theme [style*='background: white'], body.dark-theme [style*='background-color: white'] { background-color: var(--bg-card) !important; color: var(--text-color) !important; border: 1px solid var(--border-color) !important; }
 body.dark-theme .desktop-centered-card, body.dark-theme .card, body.dark-theme .sim-layout, body.dark-theme .chat-container {
     background-color: var(--bg-card);
     border-color: var(--border-color);
     color: var(--text-color);
 }
-body.dark-theme .chat-messages {
-    background-color: #1e1e2f;
-}
+body.dark-theme .chat-messages { background-color: #0f172a !important; }
 body.dark-theme .bot-message {
-    background-color: #334155;
-    color: #e2e8f0;
+    background-color: #334155 !important;
+    color: #e2e8f0 !important;
 }
 body.dark-theme .user-message {
-    background-color: var(--primary);
+    background-color: var(--primary) !important;
 }
 body.dark-theme .nav-item {
-    color: #cbd5e1;
+    color: #cbd5e1 !important;
 }
 body.dark-theme .nav-item:hover, body.dark-theme .nav-item.active {
-    background-color: #3f3f46;
-    color: white;
+    background-color: #3f3f46 !important;
+    color: white !important;
+}
+
+body.dark-theme .char-name {
+    color: #38bdf8 !important;
+}
+
+body.dark-theme .main-wrapper, body.dark-theme .app-container {
+    background-color: var(--bg-page) !important;
 }
 
 /* Tamanos de botones y UI */
@@ -708,3 +703,18 @@ body.ui-large .chat-container {
     max-width: 500px;
     font-size: 18px;
 }
+
+
+
+
+body.dark-theme input {
+    background-color: #0f172a !important;
+    color: #e0f2fe !important;
+    border-color: #334155 !important;
+}
+
+
+body.dark-theme h1, body.dark-theme h2, body.dark-theme h3, body.dark-theme h4, body.dark-theme p, body.dark-theme .sim-toast strong, body.dark-theme .card-desc, body.dark-theme label { color: #e0f2fe !important; }
+body.dark-theme .user-message, body.dark-theme .bot-message { color: #e0f2fe !important; }
+
+
