@@ -602,7 +602,7 @@ body { background-color: var(--bg-color); color: var(--text-main); overflow: hid
     background: #deb887; /* Marron claro */
     border: 5px solid #5c3a21; border-radius: 50% 50% 40% 40%; z-index: 10;
 }
-/* Orejas grandes caídas para el perro */
+/* Orejas grandes caï¿½das para el perro */
 .dog .ear {
     position: absolute; top: 20px; width: 80px; height: 110px;
     background: #8b4513; border: 5px solid #5c3a21;
@@ -649,3 +649,62 @@ body { background-color: var(--bg-color); color: var(--text-main); overflow: hid
 [data-emotion="surprise"] .dog .ear.right { transform: rotate(-140deg); }
 [data-emotion="surprise"] .dog .mouth { width: 20px; height: 30px; border-radius: 50%; border: 3px solid #5c3a21; left: 90px; }
 [data-emotion="surprise"] .dog .mouth::before, [data-emotion="surprise"] .dog .mouth::after { display: none; }
+/* =========================================
+   CONFIGURAIONES (DARK THEME, SIZES)
+   ========================================= */
+body.dark-theme {
+    --bg-page: #1e1e2f;
+    --bg-card: #2a2a3c;
+    --text-color: #e2e8f0;
+    --border-color: #334155;
+    background-color: var(--bg-page);
+    color: var(--text-color);
+}
+body.dark-theme .app-sidebar {
+    background-color: var(--bg-card);
+    border-right-color: var(--border-color);
+}
+body.dark-theme .app-header {
+    background-color: var(--bg-card);
+    border-bottom-color: var(--border-color);
+}
+body.dark-theme .desktop-centered-card, body.dark-theme .card, body.dark-theme .sim-layout, body.dark-theme .chat-container {
+    background-color: var(--bg-card);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+body.dark-theme .chat-messages {
+    background-color: #1e1e2f;
+}
+body.dark-theme .bot-message {
+    background-color: #334155;
+    color: #e2e8f0;
+}
+body.dark-theme .user-message {
+    background-color: var(--primary);
+}
+body.dark-theme .nav-item {
+    color: #cbd5e1;
+}
+body.dark-theme .nav-item:hover, body.dark-theme .nav-item.active {
+    background-color: #3f3f46;
+    color: white;
+}
+
+/* Tamanos de botones y UI */
+body.ui-small .btn {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+body.ui-small .chat-container {
+    max-width: 200px;
+}
+
+body.ui-large .btn {
+    padding: 14px 24px;
+    font-size: 18px;
+}
+body.ui-large .chat-container {
+    max-width: 500px;
+    font-size: 18px;
+}

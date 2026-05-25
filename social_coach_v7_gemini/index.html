@@ -114,7 +114,7 @@
         <!-- ========================================== -->
         <!-- VISTA 4: SIMULACIÓN ACTIVA                 -->
         <!-- ========================================== -->
-        <section id="view-sim" class="view" style="height: calc(160vh - 200px);">
+        <section id="view-sim" class="view" style="height: calc(180vh - 20px);">
             <div style="max-width: 1000px; margin: 0 auto; height: 100%; display: flex; flex-direction: column;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid #e5e7eb; padding-bottom: 16px; flex-shrink: 0;">
                   <h2 style="color: var(--primary); font-size: 24px;"><i class="fas fa-video" style="color: #b91c1c;"></i> En Simulación: <span id="sim-title-bar">Activo</span></h2>
@@ -324,32 +324,84 @@
         </section>
 
         <!-- ========================================== -->
-        <!-- VISTA: AJUSTES (API KEY)                   -->
+        <!-- VISTA: AJUSTES (API KEY & PREFERENCIAS)    -->
         <!-- ========================================== -->
         <section id="view-settings" class="view">
           <div class="desktop-centered-card" style="max-width: 600px;">
             <h1 class="view-title" style="margin-bottom: 24px;"><i class="fas fa-cog"></i> Ajustes del Sistema</h1>
             
-            <div class="card" style="border-left: 4px solid var(--primary);">
+            <div class="card" style="border-left: 4px solid var(--primary); margin-bottom: 16px;">
               <h3 style="margin-bottom: 8px;">Integración con Gemini AI</h3>
-              <p style="font-size: 14px; color: #555; margin-bottom: 20px;">
+              <p style="font-size: 14px; color: var(--text-color); margin-bottom: 20px;">
                 Para que los personajes tengan vida y consciencia, necesitas ingresar tu clave API de Google Gemini. Esta clave se guarda <b>solo en tu navegador</b> de forma local.
               </p>
               
               <div style="margin-bottom: 16px;">
-                <label style="font-size: 14px; font-weight: bold; color: #333; display: block; margin-bottom: 8px;">Clave API (API Key)</label>
+                <label style="font-size: 14px; font-weight: bold; color: var(--text-color); display: block; margin-bottom: 8px;">Clave API (API Key)</label>
                 <input type="password" id="api-key-input" placeholder="AIzaSy..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px;">
               </div>
-              
               <button class="btn btn-primary" style="width: 100%;" onclick="saveApiKey()"><i class="fas fa-save"></i> Guardar Clave</button>
-              
               <div id="api-key-status" style="margin-top: 12px; font-size: 14px; text-align: center; font-weight: bold;"></div>
+            </div>
+
+            <div class="card" style="border-left: 4px solid #6366f1;">
+              <h3 style="margin-bottom: 16px;">Ajustes de Interfaz</h3>
+              
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;">
+                <div>
+                  <h4 style="margin: 0; color: var(--text-color);">Modo Nocturno</h4>
+                  <p style="margin: 4px 0 0 0; font-size: 12px; color: #64748b;">Cambia el tema visual de la aplicación</p>
+                </div>
+                <!-- Toggle manual sencillo -->
+                <button class="btn" style="background: #333; color: white; padding: 8px 16px;" onclick="toggleDarkMode()">
+                  <i class="fas fa-moon"></i> Cambiar
+                </button>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div>
+                  <h4 style="margin: 0; color: var(--text-color);">Tamaño de los Botones</h4>
+                  <p style="margin: 4px 0 0 0; font-size: 12px; color: #64748b;">Ajustar el tamaño de la interfaz de chat</p>
+                </div>
+                <select id="ui-size-select" style="padding: 8px; border-radius: 6px;" onchange="changeUiSize(this.value)">
+                  <option value="normal">Normal</option>
+                  <option value="large">Grande</option>
+                  <option value="small">Pequeño</option>
+                </select>
+              </div>
             </div>
           </div>
         </section>
 
-        <!-- Placeholder -->
-        <section id="view-meter" class="view"><div class="desktop-centered-card"><h1 class="view-title">Mi Progreso</h1><p>Pantalla en construcción...</p></div></section>
+        <!-- ========================================== -->
+        <!-- VISTA: MI PROGRESO                         -->
+        <!-- ========================================== -->
+        <section id="view-meter" class="view">
+          <div class="desktop-centered-card" style="max-width: 800px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+              <h1 class="view-title" style="margin: 0;"><i class="fas fa-chart-line"></i> Mi Progreso</h1>
+              <button class="btn btn-primary" onclick="loadProgress()"><i class="fas fa-sync"></i> Actualizar</button>
+            </div>
+            <p style="color: var(--text-color); margin-bottom: 16px;">Historial de simulaciones y niveles de estrés guardados localmente.</p>
+            
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left; background: var(--bg-card); box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-radius: 8px;">
+                <thead>
+                  <tr style="background: var(--bg-page); color: var(--text-color); border-bottom: 2px solid #e2e8f0;">
+                    <th style="padding: 12px;">Fecha y Hora</th>
+                    <th style="padding: 12px;">Emoción Chat</th>
+                    <th style="padding: 12px;">Emoción Cámara</th>
+                    <th style="padding: 12px;">Mascota</th>
+                    <th style="padding: 12px;">Nivel Estrés</th>
+                  </tr>
+                </thead>
+                <tbody id="progress-table-body">
+                  <tr><td colspan="5" style="padding: 20px; text-align: center;">Cargando historial...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
 
       </main>
   </div>
@@ -682,6 +734,21 @@
       const finalDogEmotion = document.getElementById('dog').getAttribute('data-emotion');
       document.getElementById('result-dog').setAttribute('data-emotion', finalDogEmotion);
       
+      // Guardar progreso en el backend
+      const lastChatEmotion = currentCharacter ? currentCharacter.emotion : 'neutral'; // Aproximación
+      const finalCameraEmotion = document.getElementById('sim-cam-emotion') ? document.getElementById('sim-cam-emotion').innerText : 'neutral';
+      
+      fetch('/save_progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+              chat_emotion: lastChatEmotion,
+              camera_emotion: finalCameraEmotion,
+              pet_emotion: finalDogEmotion,
+              stress: currentStress
+          })
+      }).catch(err => console.error("Error al guardar progreso:", err));
+
       currentCharacter = null; 
       showView('view-results'); 
   }
@@ -814,6 +881,58 @@
           console.error("Error consultando estado: ", err);
       }
   }
+
+  // =========================================================================
+  // CONFIGURACIÓN Y PROGRESO
+  // =========================================================================
+  function toggleDarkMode() {
+      document.body.classList.toggle('dark-theme');
+  }
+
+  function changeUiSize(size) {
+      document.body.classList.remove('ui-large', 'ui-small', 'ui-normal');
+      document.body.classList.add(`ui-${size}`);
+  }
+
+  function loadProgress() {
+      const tbody = document.getElementById('progress-table-body');
+      tbody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center;">Cargando...</td></tr>';
+      
+      fetch('/get_progress')
+        .then(res => res.json())
+        .then(data => {
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center;">Aún no hay historial de progreso. ¡Empieza una simulación!</td></tr>';
+                return;
+            }
+            tbody.innerHTML = '';
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = "1px solid var(--border-color)";
+                tr.innerHTML = `
+                    <td style="padding: 12px;">${row.Fecha_Hora}</td>
+                    <td style="padding: 12px; text-transform: capitalize;">${row.Emocion_Chat}</td>
+                    <td style="padding: 12px; text-transform: capitalize;">${row.Emocion_Camara}</td>
+                    <td style="padding: 12px; text-transform: capitalize;">${row.Emocion_Mascota}</td>
+                    <td style="padding: 12px;"><strong>${row.Stress}/100</strong></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: red;">Error al cargar progreso.</td></tr>`;
+        });
+  }
+
+  // Cargar progreso al entrar a la vista 'view-meter'
+  const originalShowView = showView;
+  showView = function(targetId) {
+      originalShowView(targetId);
+      if (targetId === 'view-meter') {
+          loadProgress();
+      }
+  };
 
 </script>
 

@@ -1,8 +1,11 @@
-from flask import Flask, send_from_directory, Response, jsonify
+from flask import Flask, send_from_directory, Response, jsonify, request
 import cv2
 from deepface import DeepFace
 import threading
 import time
+import csv
+import os
+from datetime import datetime
 
 app = Flask(__name__, static_folder='.')
 
@@ -115,6 +118,37 @@ def stop_camera():
     global camera_active
     camera_active = False # Esto rompe el bucle en gen_frames y apaga la luz de la cámara
     return jsonify({"status": "stopped"})
+
+PROGRESS_FILE = 'progress.csv'
+
+@app.route('/save_progress', methods=['POST'])
+def save_progress():
+    data = request.json
+    file_exists = os.path.isfile(PROGRESS_FILE)
+    
+    with open(PROGRESS_FILE, mode='a', newline='', encoding='utf-8-sig') as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(['Fecha_Hora', 'Emocion_Chat', 'Emocion_Camara', 'Emocion_Mascota', 'Stress'])
+        writer.writerow([
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            data.get('chat_emotion', 'neutral'),
+            data.get('camera_emotion', 'neutral'),
+            data.get('pet_emotion', 'neutral'),
+            data.get('stress', '50')
+        ])
+    return jsonify({"status": "success"})
+
+@app.route('/get_progress')
+def get_progress():
+    if not os.path.isfile(PROGRESS_FILE):
+        return jsonify([])
+    results = []
+    with open(PROGRESS_FILE, mode='r', encoding='utf-8-sig') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            results.append(row)
+    return jsonify(results)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000, threaded=True)
