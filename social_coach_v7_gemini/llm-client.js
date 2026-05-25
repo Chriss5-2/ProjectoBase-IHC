@@ -27,10 +27,12 @@ class LLMClient {
         const url = `${this.baseUrl}/${this.modelName}:generateContent?key=${this.apiKey}`;
         const temp = temperature !== null ? temperature : this.temperature;
 
+        const enhancedSystemPrompt = systemPrompt + "\n\nINSTRUCCIÓN OBLIGATORIA: Analiza el último mensaje del usuario para detectar su emoción. Al final exacto de tu respuesta (en tu última línea y separado por un salto de línea), DEBES incluir el tag [USER_EMOTION:emocion_en_ingles] eligiendo SOLO UNA de este listado: neutral, happy, sad, angry, fear, surprise, disgust.";
+
         // Construir el cuerpo de la solicitud
         const requestBody = {
             systemInstruction: {
-                parts: [{ text: systemPrompt }]
+                parts: [{ text: enhancedSystemPrompt }]
             },
             contents: [
                 ...this.conversationHistory,

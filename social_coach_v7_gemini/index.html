@@ -114,7 +114,7 @@
         <!-- ========================================== -->
         <!-- VISTA 4: SIMULACIÓN ACTIVA                 -->
         <!-- ========================================== -->
-        <section id="view-sim" class="view" style="height: calc(160vh - 400px);">
+        <section id="view-sim" class="view" style="height: calc(160vh - 200px);">
             <div style="max-width: 1000px; margin: 0 auto; height: 100%; display: flex; flex-direction: column;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid #e5e7eb; padding-bottom: 16px; flex-shrink: 0;">
                   <h2 style="color: var(--primary); font-size: 24px;"><i class="fas fa-video" style="color: #b91c1c;"></i> En Simulación: <span id="sim-title-bar">Activo</span></h2>
@@ -151,17 +151,11 @@
                       <!-- Botones de Estado -->
                       <div class="card" style="padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; flex-shrink: 0;">
                           <div style="font-size: 13px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 12px; text-align: center; letter-spacing: 0.5px;">
-                              Controles de Estado del Módulo
+                              Controles del Módulo
                           </div>
-                          <div class="simulation-controls-row">
-                              <button class="btn-sim-control btn-ganaste" onclick="triggerSimAction('ganaste', this)">
-                                  <i class="fas fa-trophy"></i> <span>Ganaste</span>
-                              </button>
-                              <button class="btn-sim-control btn-perdiste" onclick="triggerSimAction('perdiste', this)">
-                                  <i class="fas fa-times-circle"></i> <span>Perdiste</span>
-                              </button>
-                              <button class="btn-sim-control btn-stop" onclick="triggerSimAction('stop', this)">
-                                  <i class="fas fa-stop-circle"></i> <span>Stop</span>
+                          <div class="simulation-controls-row" style="grid-template-columns: 1fr;">
+                              <button class="btn-sim-control btn-stop" onclick="triggerSimAction('stop', this)" style="border-color: #fecaca; color: #b91c1c;">
+                                  <i class="fas fa-sign-out-alt"></i> <span>Finalizar Simulación y Ver Resultados</span>
                               </button>
                           </div>
                       </div>
@@ -178,15 +172,83 @@
 
                   <!-- Panel del Entrenador Right -->
                   <div style="display: flex; flex-direction: column; gap: 16px;">
-                      <div class="card" style="background: #f0fdf4; border: 2px solid var(--green); padding: 20px;">
-                          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                              <div style="background: var(--green-dark); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="fas fa-heartbeat"></i></div>
-                              <h4 style="color: var(--green-dark); font-size: 16px; margin:0;">Biometría Local</h4>
+                      
+                      <!-- IA Emocional (Cámara y Panda) -->
+                      <div class="card" style="background: #fff; padding: 20px; border: 1px solid #e2e8f0;">
+                          <h4 style="color: var(--primary); font-size: 16px; margin-top:0; margin-bottom: 15px;"><i class="fas fa-camera"></i> IA Emocional</h4>
+                          
+                          <!-- Contenedor del video -->
+                          <div style="width: 100%; height: 160px; background: #e9ecef; border-radius: 8px; overflow: hidden; margin-bottom: 15px; border: 2px solid #dee2e6; display: flex; align-items: center; justify-content: center; position: relative;">
+                              <img id="videoStream" src="" alt="Cámara apagada" style="width: 100%; height: 100%; object-fit: cover; display: none;" />
+                              <div id="cameraPlaceholder" style="color: #6c757d; font-size: 14px;">Cámara apagada</div>
                           </div>
-                          <div style="margin-bottom: 8px; font-size: 13px; color: #555; display: flex; justify-content: space-between;">
-                              <span>Tensión detectada:</span> <span id="biometrics-status" style="font-weight: bold; color: #b91c1c;">Normal</span>
+
+                          <!-- Controles de cámara -->
+                          <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 15px;">
+                              <button class="btn btn-primary" id="startBtn" onclick="startCamera()" style="font-size: 12px; padding: 8px 12px;">Activar Cámara</button>
+                              <button class="btn" id="toggleVidBtn" onclick="toggleVideo()" style="display: none; font-size: 12px; padding: 8px 12px; background: #e2e8f0; color: #333;">Ocultar Video</button>
+                              <button class="btn btn-perdiste" id="stopBtn" onclick="stopCamera()" style="display: none; font-size: 12px; padding: 8px 12px; background: white;">Detener</button>
                           </div>
-                          <div class="progress-track" style="height: 8px; margin-bottom: 16px;"><div id="biometrics-progress" class="progress-fill" style="width: 35%; background-color: var(--green-dark); transition: all 0.5s;"></div></div>
+                          
+                          <div style="font-size: 13px; text-align: center; margin-bottom: 15px; color: #555;">Emoción: <strong id="statusText">ninguna</strong></div>
+
+                          <!-- Mini Panda -->
+                          <div style="position: relative; width: 150px; height: 150px; margin: 0 auto; perspective: 800px; transform: scale(0.6); transform-origin: top center;">
+                              <div class="panda" id="panda" data-emotion="neutral">
+                                  <div class="ear left"><div class="inner"></div></div>
+                                  <div class="ear right"><div class="inner"></div></div>
+                                  <div class="head">
+                                      <div class="eye left"><div class="pupil"></div></div>
+                                      <div class="eye right"><div class="pupil"></div></div>
+                                      <div class="blush left"></div>
+                                      <div class="blush right"></div>
+                                      <div class="nose"></div>
+                                      <div class="mouth"></div>
+                                      <div class="tear left"></div>
+                                      <div class="tear right"></div>
+                                  </div>
+                                  <div class="neck"></div>
+                              </div>
+                          </div>
+                      </div>
+
+                      <!-- IA Textual (Perrito) -->
+                      <div class="card" style="background: #fff; padding: 20px; border: 1px solid #e2e8f0;">
+                          <h4 style="color: #854d0e; font-size: 16px; margin-top:0; margin-bottom: 15px;"><i class="fas fa-dog"></i> Tu Mascota Virtual (IA Texto)</h4>
+                          <div style="font-size: 13px; text-align: center; margin-bottom: 15px; color: #555;">Emoción detectada: <strong id="dog-statusText">neutral</strong></div>
+
+                          <!-- Mini Perrito (usa misma estructura base del panda pero adaptada en CSS) -->
+                          <div style="position: relative; width: 150px; height: 150px; margin: 0 auto; perspective: 800px; transform: scale(0.6); transform-origin: top center;">
+                              <div class="dog" id="dog" data-emotion="neutral">
+                                  <div class="ear left"></div>
+                                  <div class="ear right"></div>
+                                  <div class="head">
+                                      <div class="eye left"><div class="pupil"></div></div>
+                                      <div class="eye right"><div class="pupil"></div></div>
+                                      <div class="nose"></div>
+                                      <div class="mouth"></div>
+                                      <div class="tear left"></div>
+                                      <div class="tear right"></div>
+                                  </div>
+                                  <div class="neck"></div>
+                              </div>
+                          </div>
+                      </div>
+
+                      <div class="card" style="background: #f0fdf4; border: 2px solid var(--green); padding: 20px;" id="biometrics-card">
+                          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                              <div style="display: flex; align-items: center; gap: 12px;">
+                                  <div style="background: var(--green-dark); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="fas fa-heartbeat"></i></div>
+                                  <h4 style="color: var(--green-dark); font-size: 16px; margin:0;">Estrés General</h4>
+                              </div>
+                              <button class="btn btn-icon" onclick="toggleStressVisibility()" id="btn-toggle-stress" title="Ocultar progreso" style="font-size: 16px;"><i class="fas fa-eye-slash"></i></button>
+                          </div>
+                          <div id="stress-content">
+                              <div style="margin-bottom: 8px; font-size: 13px; color: #555; display: flex; justify-content: space-between;">
+                                  <span>Nivel de Tensión:</span> <span id="biometrics-status" style="font-weight: bold; color: var(--green-dark);">50 / 100</span>
+                              </div>
+                              <div class="progress-track" style="height: 8px; margin-bottom: 16px; background-color: #cbd5e1;"><div id="biometrics-progress" class="progress-fill" style="width: 50%; background-color: var(--green-dark); transition: all 0.5s;"></div></div>
+                          </div>
                           
                           <hr style="border: none; border-top: 1px solid #c6f6d5; margin: 16px 0;">
                           
@@ -224,6 +286,40 @@
                   <i class="fas fa-play-circle" style="margin-right: 8px;"></i> Reanudar Simulación
                 </button>
               </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VISTA: RESULTADOS DE SIMULACION              -->
+        <!-- ========================================== -->
+        <section id="view-results" class="view">
+            <div class="desktop-centered-card" style="max-width: 600px; text-align: center;">
+                <h1 style="font-size: 32px; color: var(--primary); margin-bottom: 24px;"><i class="fas fa-clipboard-check"></i> Resultados de la Simulación</h1>
+                
+                <div class="card" style="margin-bottom: 24px; background-color: #f8fafc; border: 2px solid #cbd5e1;">
+                    <h3 style="margin-bottom: 16px; color: #333;">Puntuación de Estrés Final</h3>
+                    <div style="font-size: 64px; font-weight: 800; color: var(--primary); margin-bottom: 8px;" id="result-stress-score">50/100</div>
+                    <p style="font-size: 16px; color: #555; margin-bottom: 24px;" id="result-stress-message">Terminaste en un nivel neutral de estrés.</p>
+                    
+                    <h4 style="margin-bottom: 16px; color: #854d0e;">Estado final de tu Mascota Virtual:</h4>
+                    <div style="position: relative; width: 150px; height: 150px; margin: 0 auto; perspective: 800px; transform: scale(0.8); transform-origin: top center; margin-bottom: 16px;">
+                        <div class="dog" id="result-dog" data-emotion="neutral">
+                            <div class="ear left"></div>
+                            <div class="ear right"></div>
+                            <div class="head">
+                                <div class="eye left"><div class="pupil"></div></div>
+                                <div class="eye right"><div class="pupil"></div></div>
+                                <div class="nose"></div>
+                                <div class="mouth"></div>
+                                <div class="tear left"></div>
+                                <div class="tear right"></div>
+                            </div>
+                            <div class="neck"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 18px;" onclick="showView('view-home')">Volver al Inicio</button>
             </div>
         </section>
 
@@ -270,6 +366,8 @@
 
   let currentSituation = null;
   let currentCharacter = null;
+  let currentStress = 50; // Puntos de estrés de 0 a 100
+  let isStressHidden = false; // Estado de la visibilidad de estrés
   
   // Instanciar el cliente LLM global
   const llmClient = new LLMClient('');
@@ -387,11 +485,11 @@
       document.getElementById('chat-history').innerHTML = '';
       document.getElementById('chat-input-text').value = '';
       
-      // Reset Biometría
-      document.getElementById('biometrics-status').innerText = "Normal";
-      document.getElementById('biometrics-status').style.color = "var(--green-dark)";
-      document.getElementById('biometrics-progress').style.width = "35%";
-      document.getElementById('biometrics-progress').style.backgroundColor = "var(--green-dark)";
+      // Reset Biometría (Estrés) y UI de la Mascota
+      currentStress = 50;
+      updateStressUI();
+      document.getElementById('dog').setAttribute('data-emotion', 'neutral');
+      document.getElementById('dog-statusText').innerText = 'neutral';
 
       showView('view-sim');
 
@@ -425,7 +523,51 @@
       typingInd.style.display = 'block';
 
       try {
-          const reply = await llmClient.chat(text, currentCharacter.prompt);
+          let reply = await llmClient.chat(text, currentCharacter.prompt);
+          
+          // Extraer la emoción detectada por el LLM
+          const emotionMatch = reply.match(/\[USER_EMOTION:\s*([a-zA-Z]+)\]/i);
+          if (emotionMatch) {
+              const detectedEmotion = emotionMatch[1].toLowerCase();
+              const validEmotions = ['neutral', 'happy', 'sad', 'angry', 'fear', 'surprise', 'disgust'];
+              if(validEmotions.includes(detectedEmotion)) {
+                  let pointsChange = 0;
+                  let dogEmotion = 'neutral';
+                  
+                  // Lógica de mapeo de Emoción a Estrés y Dog Emotion
+                  switch(detectedEmotion) {
+                      case 'angry': pointsChange = 20; dogEmotion = 'fear'; break;
+                      case 'happy': pointsChange = -15; dogEmotion = 'happy'; break;
+                      case 'sad': pointsChange = 5; dogEmotion = 'sad'; break;
+                      case 'fear': pointsChange = 10; dogEmotion = 'surprise'; break;
+                      case 'disgust': pointsChange = 10; dogEmotion = 'sad'; break;
+                      case 'neutral': pointsChange = -5; dogEmotion = 'neutral'; break;
+                      case 'surprise': pointsChange = 0; dogEmotion = 'surprise'; break;
+                  }
+                  
+                  // Actualizar puntos
+                  currentStress += pointsChange;
+                  if (currentStress > 100) currentStress = 100;
+                  if (currentStress < 0) currentStress = 0;
+                  
+                  // Si el estrés es muy alto, domina el estado de la mascota a asustado/llorando
+                  if (currentStress >= 80) {
+                      dogEmotion = 'sad'; // Llorando de miedo/estrés
+                  }
+                  
+                  document.getElementById('dog').setAttribute('data-emotion', dogEmotion);
+                  document.getElementById('dog-statusText').innerText = dogEmotion;
+                  
+                  updateStressUI();
+                  
+                  if (currentStress >= 100) {
+                      setTimeout(() => showView('view-pause'), 2000);
+                  }
+              }
+              // Limpiar la respuesta para que el usuario no vea el tag
+              reply = reply.replace(/\[USER_EMOTION:.*?\]/gi, '').trim();
+          }
+
           typingInd.style.display = 'none';
           appendMessage('npc', reply);
       } catch (err) {
@@ -473,8 +615,37 @@
   }
 
   // =========================================================================
-  // BOTONES DE CONTROL (Ganaste, Perdiste, Stop)
+  // BOTONES DE CONTROL (Stress y Resultados)
   // =========================================================================
+  
+  function updateStressUI() {
+      const statusEl = document.getElementById('biometrics-status');
+      const progressEl = document.getElementById('biometrics-progress');
+      
+      statusEl.innerText = `${currentStress} / 100`;
+      progressEl.style.width = `${currentStress}%`;
+      
+      let color = "var(--green-dark)"; // 0-40
+      if (currentStress > 40 && currentStress <= 70) color = "#d97706"; // warning
+      if (currentStress > 70) color = "#b91c1c"; // danger
+      
+      statusEl.style.color = color;
+      progressEl.style.backgroundColor = color;
+  }
+
+  function toggleStressVisibility() {
+      isStressHidden = !isStressHidden;
+      const content = document.getElementById('stress-content');
+      const btn = document.getElementById('btn-toggle-stress');
+      if (isStressHidden) {
+          content.style.display = 'none';
+          btn.innerHTML = '<i class="fas fa-eye"></i>';
+      } else {
+          content.style.display = 'block';
+          btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+      }
+  }
+
   function triggerSimAction(action, buttonEl) {
       buttonEl.classList.add('pressed-active');
       setTimeout(() => { buttonEl.classList.remove('pressed-active'); }, 600);
@@ -483,37 +654,37 @@
       toast.style.display = 'block';
       toast.className = "sim-toast";
 
-      let biometricsText = ""; let biometricsPct = ""; let biometricsColor = "";
-
-      if(action === 'ganaste') {
-          toast.classList.add('toast-success');
-          toast.innerHTML = `<i class="fas fa-trophy"></i> <strong>¡Módulo Superado!</strong> Control de emociones exitoso. Redirigiendo...`;
-          biometricsText = "Controlado (Calma)"; biometricsPct = "15%"; biometricsColor = "var(--green-dark)";
-          document.getElementById('sim-coach-note').innerText = "¡Excelente! Mantuviste tus rangos de estrés estables bajo provocación.";
-          setTimeout(() => { toast.style.display = 'none'; showView('view-home'); }, 2500);
-
-      } else if(action === 'perdiste') {
-          toast.classList.add('toast-danger');
-          toast.innerHTML = `<i class="fas fa-heart-broken"></i> <strong>Simulación Fallida:</strong> Alta tensión acumulada. Ingresando a modo de calma...`;
-          biometricsText = "CRÍTICO (Estrés Alto)"; biometricsPct = "95%"; biometricsColor = "#b91c1c";
-          document.getElementById('sim-coach-note').innerText = "Se detectaron picos críticos de tensión. Se sugiere ingresar al Momento de Calma.";
-          setTimeout(() => { toast.style.display = 'none'; showView('view-pause'); }, 2500);
-
-      } else if(action === 'stop') {
+      if(action === 'stop') {
           toast.classList.add('toast-warning');
-          toast.innerHTML = `<i class="fas fa-stop-circle"></i> <strong>Simulación Detenida</strong> por el usuario. Regresando...`;
-          setTimeout(() => { toast.style.display = 'none'; endSimulation(); }, 1500);
-      }
-
-      if(action !== 'stop') {
-          document.getElementById('biometrics-status').innerText = biometricsText;
-          document.getElementById('biometrics-status').style.color = biometricsColor;
-          document.getElementById('biometrics-progress').style.width = biometricsPct;
-          document.getElementById('biometrics-progress').style.backgroundColor = biometricsColor;
+          toast.innerHTML = `<i class="fas fa-sign-out-alt"></i> <strong>Cerrando Sesión...</strong> Procesando puntuación final.`;
+          setTimeout(() => { 
+              toast.style.display = 'none'; 
+              showSimulationResults();
+          }, 1500);
       }
   }
 
-  function endSimulation() { currentCharacter = null; showView('view-characters'); }
+  function showSimulationResults() {
+      // Detener cámara si estaba prendida
+      stopCamera();
+      
+      // Actualizar vista de resultados
+      document.getElementById('result-stress-score').innerText = `${currentStress}/100`;
+      
+      let msg = "";
+      if (currentStress <= 30) msg = "¡Excelente! Manejaste el conflicto con mucha calma.";
+      else if (currentStress <= 70) msg = "Estuviste regular. Sentiste un poco de tensión, pero manejable.";
+      else msg = "El estrés dominó la conversación. Recuerda, prioriza tomar descansos.";
+      
+      document.getElementById('result-stress-message').innerText = msg;
+      
+      // Transferir la última emoción del perro
+      const finalDogEmotion = document.getElementById('dog').getAttribute('data-emotion');
+      document.getElementById('result-dog').setAttribute('data-emotion', finalDogEmotion);
+      
+      currentCharacter = null; 
+      showView('view-results'); 
+  }
 
   // =========================================================================
   // CONTROL DE VISTAS
@@ -534,6 +705,114 @@
     const header = document.getElementById('main-header');
     if(targetId === 'view-pause' || targetId === 'view-sim') header.style.display = 'none';
     else header.style.display = 'flex';
+  }
+
+  // =========================================================================
+  // LOGICA DEL PANDA Y LA CAMARA
+  // =========================================================================
+  let pollingInterval = null;
+
+  function setEmotion(emotion) {
+      document.getElementById('panda').setAttribute('data-emotion', emotion);
+  }
+
+  let isVideoHidden = false;
+  function toggleVideo() {
+      isVideoHidden = !isVideoHidden;
+      const videoStream = document.getElementById('videoStream');
+      const placeholder = document.getElementById('cameraPlaceholder');
+      const btn = document.getElementById('toggleVidBtn');
+      
+      if (isVideoHidden) {
+          videoStream.style.opacity = '0';
+          placeholder.style.display = 'block';
+          placeholder.innerText = 'Cámara oculta (activo)';
+          btn.innerText = 'Mostrar Video';
+      } else {
+          videoStream.style.opacity = '1';
+          placeholder.style.display = 'none';
+          btn.innerText = 'Ocultar Video';
+      }
+  }
+
+  function startCamera() {
+      const videoStream = document.getElementById('videoStream');
+      const placeholder = document.getElementById('cameraPlaceholder');
+      
+      videoStream.src = '/video_feed';
+      videoStream.style.display = 'block';
+      isVideoHidden = false;
+      videoStream.style.opacity = '1';
+      placeholder.style.display = 'none';
+      
+      const btn = document.getElementById('startBtn');
+      btn.style.display = "none";
+
+      const stopBtn = document.getElementById('stopBtn');
+      stopBtn.style.display = "inline-block";
+      
+      const toggleBtn = document.getElementById('toggleVidBtn');
+      toggleBtn.style.display = "inline-block";
+      toggleBtn.innerText = 'Ocultar Video';
+
+      if (!pollingInterval) {
+          pollingInterval = setInterval(fetchEmotion, 100);
+      }
+  }
+
+  async function stopCamera() {
+      if (pollingInterval) {
+          clearInterval(pollingInterval);
+          pollingInterval = null;
+      }
+      
+      try {
+          await fetch('/stop_camera');
+      } catch (err) {
+          console.error(err);
+      }
+      
+      const videoStream = document.getElementById('videoStream');
+      videoStream.src = "";
+      videoStream.style.display = 'none';
+      
+      const placeholder = document.getElementById('cameraPlaceholder');
+      placeholder.style.display = 'block';
+      placeholder.innerText = 'Cámara apagada';
+      
+      document.getElementById('startBtn').style.display = "inline-block";
+      document.getElementById('stopBtn').style.display = "none";
+      document.getElementById('toggleVidBtn').style.display = "none";
+      document.getElementById('statusText').innerText = "apagada";
+      
+      setEmotion('neutral');
+      const panda = document.getElementById('panda');
+      panda.style.setProperty('--rot-y', `0deg`);
+      panda.style.setProperty('--rot-x', `0deg`);
+  }
+
+  async function fetchEmotion() {
+      try {
+          const response = await fetch('/get_state');
+          const data = await response.json();
+          
+          document.getElementById('statusText').innerText = data.emotion;
+          
+          const validEmotions = ['neutral', 'happy', 'sad', 'angry', 'fear', 'surprise', 'disgust'];
+          if(validEmotions.includes(data.emotion)) {
+              setEmotion(data.emotion);
+          }
+
+          const rotY = (data.coords.x - 50) * 1.5; 
+          const rotX = -(data.coords.y - 50) * 1.2; 
+
+          const panda = document.getElementById('panda');
+          panda.style.setProperty('--rot-y', `${rotY}deg`);
+          panda.style.setProperty('--rot-x', `${rotX}deg`);
+
+      } catch (err) {
+          console.error("Error consultando estado: ", err);
+      }
   }
 
 </script>

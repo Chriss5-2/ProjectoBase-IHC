@@ -112,3 +112,540 @@ body { background-color: var(--bg-color); color: var(--text-main); overflow: hid
 .ring-2 { width: 240px; height: 240px; background-color: rgba(255,255,255,0.05); z-index: 1; animation: breathe 4s infinite alternate ease-in-out reverse; }
 @keyframes breathe { 0% { transform: scale(0.9); } 100% { transform: scale(1.1); } }
 @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(164, 222, 184, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(164, 222, 184, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(164, 222, 184, 0); } }
+ /* Base del Panda */
+  .panda {
+      position: relative;
+      width: 250px;
+      height: 250px;
+      margin: 0 auto 40px;
+      /* Al aplicarle aquí la rotación al contenedor entero, todo el cuerpo tiene volumen 3D integrado */
+      transform: rotateY(var(--rot-y, 0deg)) rotateX(var(--rot-x, 0deg));
+      transform-style: preserve-3d;
+      transition: transform 0.15s ease-out;
+  }
+  
+  /* 
+   * LA MAGIA DE LA TRANSICIÓN 
+   * Esto resuelve el problema de las "42 combinatorias". 
+   * En lugar de programar cada animación de A -> B, 
+   * CSS interpola automáticamente de CUALQUIER estado a CUALQUIER otro de forma suave.
+   */
+  .panda * {
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .head {
+      position: absolute;
+      top: 30px;
+      left: 25px;
+      width: 200px;
+      height: 180px;
+      background: #fff;
+      border: 5px solid #2d2d2d;
+      border-radius: 50% 50% 45% 45%;
+      z-index: 10;
+  }
+  
+  /* Orejas */
+  .ear {
+      position: absolute;
+      top: 10px;
+      width: 70px;
+      height: 60px;
+      background: #2d2d2d;
+      border: 5px solid #2d2d2d;
+      border-radius: 50%;
+      z-index: 1;
+  }
+  .ear .inner {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 35px;
+      height: 25px;
+      background: #ffb6c1;
+      border-radius: 50%;
+  }
+  .ear.left { left: 10px; transform: rotate(-30deg); }
+  .ear.right { right: 10px; transform: rotate(30deg); }
+  
+  /* Cuello/Cuerpo base */
+  .neck {
+      position: absolute;
+      bottom: 25px;
+      left: 70px;
+      width: 110px;
+      height: 40px;
+      background: #2d2d2d;
+      border-radius: 20px;
+      z-index: 5;
+  }
+  
+  /* Circulos negros de los ojos */
+  .eye {
+      position: absolute;
+      top: 60px;
+      width: 50px;
+      height: 65px;
+      background: #2d2d2d;
+      border-radius: 50% 50% 45% 45%;
+  }
+  .eye.left { left: 35px; transform: rotate(-20deg); }
+  .eye.right { right: 35px; transform: rotate(20deg); }
+  
+  /* Globos oculares blancos y pupilas */
+  .pupil {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      border: 0px solid transparent;
+  }
+  .pupil::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 12px; height: 12px;
+      background: #2d2d2d;
+      border-radius: 50%;
+  }
+  
+  /* Rubor / Mejillas */
+  .blush {
+      position: absolute;
+      top: 105px;
+      width: 30px;
+      height: 15px;
+      background: #ffb6c1;
+      border-radius: 50%;
+      opacity: 0.6;
+  }
+  .blush.left { left: 20px; }
+  .blush.right { right: 20px; }
+  
+  /* Nariz */
+  .nose {
+      position: absolute;
+      top: 115px;
+      left: 88px;
+      width: 16px;
+      height: 10px;
+      background: #2d2d2d;
+      border-radius: 50% 50% 60% 60%;
+  }
+  
+  /* Boca */
+  .mouth {
+      position: absolute;
+      top: 135px;
+      left: 83px;
+      width: 26px;
+      height: 12px;
+      border-bottom: 4px solid #2d2d2d;
+      border-radius: 0 0 50% 50%;
+      background: transparent;
+  }
+  
+  /* Lágrimas */
+  .tear {
+      position: absolute;
+      width: 10px;
+      height: 15px;
+      background: #74ccf4;
+      border-radius: 50% 50% 50% 50%;
+      opacity: 0;
+      top: 100px;
+  }
+  .tear.left { left: 55px; }
+  .tear.right { right: 55px; }
+  
+  
+  /* =========================================
+     ESTADOS DE LAS EMOCIONES (EXAGERADAS)
+     ========================================= */
+  
+  /* Neutral ya es el estado base definido arriba */
+  
+  /* 1. Happy (Feliz) - Exagerado (Estilo Emoji Alegre) */
+  [data-emotion="happy"] .head { 
+      transform: translateY(-10px); 
+      background: radial-gradient(circle at 30% 30%, #fffde7, #fff59d); /* Resplandor amarillo claro */
+      animation: happyBounce 0.8s infinite alternate ease-in-out; 
+  }
+  [data-emotion="happy"] .ear.left { transform: rotate(-30deg) translate(-5px, 5px); }
+  [data-emotion="happy"] .ear.right { transform: rotate(30deg) translate(5px, 5px); }
+  
+  /* Ojos en forma de arco apuntando hacia arriba, negros con brillo blanco */
+  [data-emotion="happy"] .eye { 
+      height: 48px; 
+      width: 45px;
+      background: #2d2d2d; 
+      border-radius: 50% 50% 15px 15px;
+      margin-top: 15px;
+      border: none;
+      overflow: hidden;
+  }
+  [data-emotion="happy"] .eye.left { left: 35px; transform: rotate(-10deg); }
+  [data-emotion="happy"] .eye.right { right: 35px; transform: rotate(10deg); }
+  
+  /* Brillito blanco en la parte baja simulando el ojo anime alegre */
+  [data-emotion="happy"] .pupil { 
+      opacity: 1;
+      background: #fff;
+      width: 16px;
+      height: 16px;
+      top: 28px;
+      left: 14px;
+      border: none;
+      border-radius: 50%;
+  }
+  [data-emotion="happy"] .pupil::after { opacity: 0; }
+  
+  /* Boca abierta en carcajada (Gigante), dientes superiores blancos y fondo oscuro con lengua rosa */
+  [data-emotion="happy"] .mouth { 
+      top: 105px; 
+      left: 45px; 
+      width: 100px; 
+      height: 65px; 
+      background: linear-gradient(
+          to bottom, 
+          #fff 0%, #fff 25%,     /* Dientes blancos arriba */
+          #8a1c1c 25%, #8a1c1c 65%, /* Fondo de la boca oscura */
+          #ffb6c1 65%, #ffb6c1 100% /* Lengua rosada abajo */
+      );
+      border-radius: 10px 10px 90px 90px; 
+      border: 5px solid #2d2d2d; 
+  }
+  
+  /* Rubor redondo y sonrojado */
+  [data-emotion="happy"] .blush { 
+      width: 25px; 
+      height: 25px; 
+      background: #ff4757;
+      opacity: 0.9; 
+      border-radius: 50%;
+      transform: translateY(-5px); 
+      top: 105px; 
+  }
+  [data-emotion="happy"] .blush.left { left: 15px; }
+  [data-emotion="happy"] .blush.right { right: 15px; }
+  
+  /* 2. Sad (Triste) - Llorando a gritos (Como el Emoji) */
+  [data-emotion="sad"] .head { 
+      transform: translateY(15px); 
+      background: radial-gradient(circle at 30% 30%, #e1f5fe, #b3e5fc); /* Tono azulado frío y depresivo */
+      animation: sobbingFace 0.35s infinite alternate ease-in-out; 
+  }
+  [data-emotion="sad"] .ear.left { transform: rotate(-60deg) translate(-20px, 20px); }
+  [data-emotion="sad"] .ear.right { transform: rotate(60deg) translate(20px, 20px); }
+  
+  /* Ojos cerrados apretados, tipo arco hacia abajo / \ */
+  [data-emotion="sad"] .eye { 
+      height: 18px; 
+      width: 45px;
+      background: #2d2d2d; 
+      border: none;
+      border-radius: 50% 50% 10% 10%;
+      margin-top: 25px;
+      overflow: hidden;
+  }
+  [data-emotion="sad"] .eye.left { transform: rotate(35deg); left: 30px; }
+  [data-emotion="sad"] .eye.right { transform: rotate(-35deg); right: 30px; }
+  
+  /* Ocultamos las pupilas porque los ojos están cerrados apretados */
+  [data-emotion="sad"] .pupil { opacity: 0; }
+  
+  /* Boca abierta en forma de frijol/grito, oscura por dentro y con lengua */
+  [data-emotion="sad"] .mouth { 
+      background: radial-gradient(circle at center bottom, #ff6b81 40%, #5a0000 45%);
+      border: 4px solid #2d2d2d; 
+      border-radius: 50px 50px 60px 60px; 
+      top: 120px;
+      width: 45px;
+      height: 55px;
+      left: 73px;
+  }
+  [data-emotion="sad"] .tear { 
+      width: 35px;
+      height: 125px;
+      top: 90px;
+      background: #4fc3f7;
+      opacity: 0.85;
+      z-index: 20;
+      animation: floodTears 0.2s infinite alternate ease-in-out; 
+  }
+  [data-emotion="sad"] .tear.left { 
+      left: 8px; 
+      /* Curva drástica hacia la izquierda fluyendo por la mejilla */
+      border-radius: 90% 0px 50% 60% / 60% 0px 40% 40%;
+      transform: rotate(25deg) skewX(-15deg);
+      box-shadow: inset 8px -5px 15px rgba(255,255,255,0.8), -10px 25px 0 -8px #81d4fa;
+  }
+  [data-emotion="sad"] .tear.right { 
+      right: 8px; 
+      /* Curva drástica hacia la derecha fluyendo por la mejilla */
+      border-radius: 0px 90% 60% 50% / 0px 60% 40% 40%;
+      transform: rotate(-25deg) skewX(15deg);
+      box-shadow: inset -8px -5px 15px rgba(255,255,255,0.8), 10px 25px 0 -8px #81d4fa;
+  }
+  [data-emotion="sad"] .blush { opacity: 0.8; width: 40px; height: 25px; top: 110px; background: #ff7675; }
+  [data-emotion="sad"] .neck { transform: scaleY(0.8) translateY(10px); }
+  
+  /* 3. Angry (Enojado) - Nivel Emoji Furioso */
+  [data-emotion="angry"] .head { 
+      background: radial-gradient(circle at 50% 50%, #ff5252, #d50000 85%); /* Olas de calor/sombras intensas */
+      border-color: #7f0000; 
+      transform: scale(1.05);
+      animation: shakeExaggerated 0.1s infinite; 
+  }
+  [data-emotion="angry"] .ear { background: #8e0000; border-color: #4a0000; }
+  [data-emotion="angry"] .neck { background: #8e0000; }
+  
+  /* Ojos gigantes con ceño fruncido rojo oscuro */
+  [data-emotion="angry"] .eye { 
+      height: 60px; 
+      width: 45px;
+      background: #fff; 
+      border-radius: 10px 10px 45px 45px;
+      border: 4px solid #2d2d2d;
+      border-top: 18px solid #ba0000; /* La ceja super enojada */
+      margin-top: -5px;
+      overflow: hidden;
+  }
+  [data-emotion="angry"] .eye.left { 
+      left: 35px; 
+      transform: rotate(25deg); 
+  }
+  [data-emotion="angry"] .eye.right { 
+      right: 35px; 
+      transform: rotate(-25deg); 
+  }
+  
+  /* Pupila dilatada oscura con brillo afilado */
+  [data-emotion="angry"] .pupil { 
+      top: 5px; 
+      left: 8px; 
+      width: 20px; 
+      height: 30px; 
+      background: #1a1a1a; 
+      border: none;
+      border-radius: 50%;
+  }
+  [data-emotion="angry"] .pupil::after { 
+      width: 8px; 
+      height: 8px; 
+      background: #fff; 
+      top: 10px; 
+      left: 6px; 
+      border-radius: 0px;
+      transform: rotate(45deg); /* Brillo afilado de comic agresivo */
+  }
+  
+  /* Boca enseñando los dientes apretados con rabia */
+  [data-emotion="angry"] .mouth { 
+      top: 130px; 
+      left: 55px; 
+      width: 80px; 
+      height: 35px; 
+      background: linear-gradient(to bottom, #fff 44%, #2d2d2d 44%, #2d2d2d 56%, #fff 56%);
+      border: 5px solid #2d2d2d; 
+      border-radius: 40px 40px 15px 15px; 
+  }
+  [data-emotion="angry"] .blush { opacity: 0; }
+  
+  /* 4. Fear (Miedo) - Exagerado */
+  [data-emotion="fear"] .head { 
+      background: radial-gradient(circle at 40% 30%, #f3e5f5, #ab47bc 90%); /* Morado/lila fantasmal de susto */
+      animation: shakeExaggerated 0.1s infinite; 
+  }
+  [data-emotion="fear"] .ear { background: #6a1b9a; border-color: #4a148c; }
+  [data-emotion="fear"] .neck { background: #6a1b9a; }
+  [data-emotion="fear"] .eye { 
+      height: 90px; 
+      width: 80px; 
+      border-radius: 50%; 
+      top: 30px; 
+      background: #fff;
+  }
+  [data-emotion="fear"] .eye.left { left: 15px; }
+  [data-emotion="fear"] .eye.right { right: 15px; }
+  [data-emotion="fear"] .pupil { width: 8px; height: 8px; left: 35px; top: 40px; background: #000; }
+  [data-emotion="fear"] .pupil::after { display: none; }
+  [data-emotion="fear"] .mouth { 
+      border: 6px solid #2d2d2d; 
+      border-radius: 40px; 
+      width: 30px; 
+      height: 40px; 
+      left: 80px; 
+      top: 130px; 
+      background: #000;
+  }
+  [data-emotion="fear"] .blush { opacity: 0; }
+  
+  /* 5. Surprise (Sorpresa) - Exagerado */
+  [data-emotion="surprise"] .head { 
+      transform: translateY(-30px); 
+      background: radial-gradient(circle at 50% 30%, #fff3e0, #ffb300); /* Destello naranja/amarillo de "shock" */
+  }
+  [data-emotion="surprise"] .ear { background: #f57c00; border-color: #e65100; transform: translateY(-20px) scale(1.2); }
+  [data-emotion="surprise"] .neck { background: #f57c00; transform: scaleY(1.5) translateY(-5px); }
+  [data-emotion="surprise"] .eye { transform: translateY(-20px); height: 90px; width: 60px; border-radius: 50%; background: #fff; }
+  [data-emotion="surprise"] .pupil { width: 15px; height: 15px; top: 35px; left: 22px; background: #000;}
+  [data-emotion="surprise"] .pupil::after { width: 8px; height: 8px; }
+  [data-emotion="surprise"] .mouth { 
+      border: 6px solid #2d2d2d; 
+      border-radius: 50%; 
+      width: 40px; 
+      height: 60px; 
+      left: 75px; 
+      top: 110px; 
+      background: #2d2d2d; 
+  }
+  
+  /* 6. Disgust (Disgusto) - Exagerado */
+  [data-emotion="disgust"] .head { 
+      background: radial-gradient(circle at 40% 40%, #e8f5e9, #66bb6a); /* Verde musgo de náuseas */
+  }
+  [data-emotion="disgust"] .ear { background: #388e3c; border-color: #1b5e20; }
+  [data-emotion="disgust"] .neck { background: #388e3c; }
+  [data-emotion="disgust"] .ear.left { transform: rotate(-80deg) translate(-20px, 10px); }
+  [data-emotion="disgust"] .eye { background: #fff; }
+  [data-emotion="disgust"] .eye.left { transform: rotate(-20deg) scaleY(0.3) scaleX(1.2); top: 70px; }
+  [data-emotion="disgust"] .eye.right { transform: rotate(45deg) scale(0.8); top: 50px; }
+  [data-emotion="disgust"] .mouth { 
+      transform: skewX(-40deg) rotate(-15deg); 
+      left: 70px; 
+      width: 50px; 
+      border-bottom: 6px solid #2d2d2d; 
+      border-radius: 30px 10px;
+      top: 140px; 
+  }
+  [data-emotion="disgust"] .blush { background: #33691e; opacity: 0.5; }
+  
+  /* Animación para los chorros de lágrimas estilo cascada en "sad" exagerado */
+  @keyframes floodTears {
+      0% { transform: scaleY(1) translateY(0); opacity: 0.8; }
+      50% { transform: scaleY(1.08) translateY(2px); opacity: 1; }
+      100% { transform: scaleY(1) translateY(0); opacity: 0.8; }
+  }
+  
+  /* Animación para el sollozo de la cara en "sad" */
+  @keyframes sobbingFace {
+      0% { transform: translateY(15px) scaleY(1) scaleX(1); }
+      100% { transform: translateY(22px) scaleY(0.96) scaleX(1.02); }
+  }
+  
+  /* Animación saltarina de felicidad extrema */
+  @keyframes happyBounce {
+      0% { transform: translateY(-10px) scale(1.02); }
+      100% { transform: translateY(0px) scale(0.98); }
+  }
+  
+  /* Animación para sacudida de "fear" exagerado */
+  @keyframes shakeExaggerated {
+      0% { transform: translate(2px, 1px) rotate(0deg); }
+      10% { transform: translate(-1px, -2px) rotate(-1deg); }
+      20% { transform: translate(-3px, 0px) rotate(1deg); }
+      30% { transform: translate(0px, 2px) rotate(0deg); }
+      40% { transform: translate(1px, -1px) rotate(1deg); }
+      50% { transform: translate(-1px, 2px) rotate(-1deg); }
+      60% { transform: translate(-3px, 1px) rotate(0deg); }
+      70% { transform: translate(2px, 1px) rotate(-1deg); }
+      80% { transform: translate(-1px, -1px) rotate(1deg); }
+      90% { transform: translate(2px, 2px) rotate(0deg); }
+      100% { transform: translate(1px, -2px) rotate(-1deg); }
+  }
+  
+  
+  /* =========================================
+     CONTROLES / BOTONES
+     ========================================= */
+  .controls button {
+      margin: 5px;
+      padding: 10px 15px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      background: #007bff;
+      color: white;
+      border-radius: 5px;
+      transition: background 0.3s, transform 0.1s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+  .controls button:hover {
+      background: #0056b3;
+  }
+  .controls button:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  }
+/* =========================================
+   ESTILOS MASCOTA VIRTUAL (PERRITO)
+   ========================================= */
+.dog {
+    position: relative;
+    width: 250px;
+    height: 250px;
+    margin: 0 auto;
+    transform: rotateY(var(--rot-y, 0deg)) rotateX(var(--rot-x, 0deg));
+    transform-style: preserve-3d;
+    transition: transform 0.15s ease-out;
+}
+.dog * { transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+
+.dog .head {
+    position: absolute; top: 30px; left: 25px; width: 200px; height: 180px;
+    background: #deb887; /* Marron claro */
+    border: 5px solid #5c3a21; border-radius: 50% 50% 40% 40%; z-index: 10;
+}
+/* Orejas grandes ca�das para el perro */
+.dog .ear {
+    position: absolute; top: 20px; width: 80px; height: 110px;
+    background: #8b4513; border: 5px solid #5c3a21;
+    border-radius: 50% 50% 50% 50% / 10% 10% 90% 90%;
+    z-index: 1; transform-origin: top center;
+}
+.dog .ear.left { left: 0px; transform: rotate(15deg); }
+.dog .ear.right { right: 0px; transform: rotate(-15deg); }
+.dog .neck {
+    position: absolute; bottom: 25px; left: 70px; width: 110px; height: 40px;
+    background: #8b4513; border-radius: 20px; z-index: 5;
+}
+/* Ojos y Nariz de perro */
+.dog .eye { position: absolute; top: 60px; width: 45px; height: 50px; background: #fff; border-radius: 50%; border: 3px solid #5c3a21; }
+.dog .eye.left { left: 40px; }
+.dog .eye.right { right: 40px; }
+.dog .pupil { position: absolute; top: 15px; left: 15px; width: 18px; height: 18px; background: #2d2d2d; border-radius: 50%; }
+.dog .pupil::after { content: ''; position: absolute; top: 3px; left: 3px; width: 6px; height: 6px; background: #fff; border-radius: 50%; }
+.dog .nose { position: absolute; top: 110px; left: 80px; width: 40px; height: 25px; background: #2d2d2d; border-radius: 40% 40% 60% 60%; }
+.dog .mouth { position: absolute; top: 135px; left: 95px; width: 0px; height: 15px; border-left: 3px solid #5c3a21; }
+.dog .mouth::before, .dog .mouth::after { content: ''; position: absolute; top: 10px; width: 20px; height: 15px; border-bottom: 3px solid #5c3a21; border-radius: 50%; }
+.dog .mouth::before { left: -20px; border-left: 3px solid transparent; transform: rotate(20deg); }
+.dog .mouth::after { right: -20px; border-right: 3px solid transparent; transform: rotate(-20deg); }
+
+/* Emociones exclusivas del Perrito (Reusando las animaciones del panda) */
+[data-emotion="happy"] .dog .head { transform: translateY(-10px); animation: happyBounce 0.8s infinite alternate ease-in-out; }
+[data-emotion="happy"] .dog .ear.left { transform: rotate(35deg) scaleY(0.8); }
+[data-emotion="happy"] .dog .ear.right { transform: rotate(-35deg) scaleY(0.8); }
+[data-emotion="happy"] .dog .mouth { height: 25px; border-left: none; width: 35px; left: 82px; background: #ffb6c1; border: 3px solid #5c3a21; border-radius: 10px 10px 40px 40px; }
+[data-emotion="happy"] .dog .mouth::before, [data-emotion="happy"] .dog .mouth::after { display: none; }
+
+[data-emotion="sad"] .dog .head { transform: translateY(15px); animation: sobbingFace 0.35s infinite alternate ease-in-out; }
+[data-emotion="sad"] .dog .ear.left { transform: rotate(5deg) scaleY(1.2); }
+[data-emotion="sad"] .dog .ear.right { transform: rotate(-5deg) scaleY(1.2); }
+[data-emotion="sad"] .dog .eye { height: 18px; border-radius: 50% 50% 10% 10%; margin-top: 25px; }
+
+[data-emotion="angry"] .dog .head { border-color: #5a0000; animation: shakeExaggerated 0.1s infinite; }
+[data-emotion="angry"] .dog .ear { background: #5a0000; }
+[data-emotion="angry"] .dog .eye { border-top: 8px solid #5a0000; border-radius: 10px 10px 50% 50%; margin-top: 5px; }
+[data-emotion="angry"] .dog .eye.left { transform: rotate(15deg); }
+[data-emotion="angry"] .dog .eye.right { transform: rotate(-15deg); }
+
+[data-emotion="surprise"] .dog .ear.left { transform: rotate(140deg); }
+[data-emotion="surprise"] .dog .ear.right { transform: rotate(-140deg); }
+[data-emotion="surprise"] .dog .mouth { width: 20px; height: 30px; border-radius: 50%; border: 3px solid #5c3a21; left: 90px; }
+[data-emotion="surprise"] .dog .mouth::before, [data-emotion="surprise"] .dog .mouth::after { display: none; }
