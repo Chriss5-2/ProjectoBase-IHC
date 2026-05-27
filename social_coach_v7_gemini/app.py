@@ -6,6 +6,10 @@ import time
 import csv
 import os
 from datetime import datetime
+#----
+import speech_recognition as sr
+from gtts import gTTS
+import uuid
 
 app = Flask(__name__, static_folder='.')
 
@@ -149,6 +153,87 @@ def get_progress():
         for row in reader:
             results.append(row)
     return jsonify(results)
+
+# Rutas para TTS y STT usando gTTS y SpeechRecognition
+@app.route('/api/stt', methods=['POST'])
+def speech_to_text():
+    if 'audio' not in request.files:
+        return jsonify({"error": "No audio file provided"}), 400
+
+    audio_file = request.files['audio']
+    recognizer = sr.Recognizer()
+    
+    # Manejo de WebM (navegadores) hacia WAV usando imageio-ffmpeg
+    try:
+        import imageio_ffmpeg
+        import subprocess
+        import tempfile
+        
+        ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+        
+        # Guardar archivo temporal webm
+        with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as temp_webm:
+            audio_file.save(temp_webm.name)
+            webm_path = temp_webm.name
+            
+        # Archivo temporal wav de salida
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_wav:
+            wav_path = temp_wav.name
+
+        # Ejecutar ffmpeg para convertir webm a wav
+        # -y para sobreescribir si es necesario, -i archivo de entrada, y luego el archivo de salida
+        subprocess.run([ffmpeg_exe, '-y', '-i', webm_path, wav_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        
+        # Leer el WAV generado con SpeechRecognition
+        import io
+        with open(wav_path, "rb") as f:
+            wav_data = f.read()
+            
+        source_audio = io.BytesIO(wav_data)
+        
+        # Limpiar temporales
+        try:
+            os.remove(webm_path)
+            os.remove(wav_path)
+        except:
+            pass
+
+    except Exception as e:
+        print(f"Error procesando audio: {e}")
+        # Intentar en crudo si falló lo anterior
+        source_audio = audio_file
+        source_audio.seek(0)
+
+    try:
+        with sr.AudioFile(source_audio) as source:
+            audio_data = recognizer.record(source)
+            text = recognizer.recognize_google(audio_data, language='es-ES')
+            return jsonify({"text": text})
+    except ValueError as ve:
+        return jsonify({"error": "Formato de audio no soportado. Instala pydub y ffmpeg para procesar WebM/Opus."}), 400
+    except sr.UnknownValueError:
+        return jsonify({"error": "No se pudo entender el audio"}), 400
+    except sr.RequestError as e:
+        return jsonify({"error": f"No se pudieron obtener los resultados; {e}"}), 500
+        
+@app.route('/api/tts', methods=['POST'])
+def text_to_speech():
+    data = request.json
+    text = data.get('text', '')
+    
+    # Asegúrate de tener una carpeta /static
+    os.makedirs("static", exist_ok=True)
+    
+    # Generar un nombre de archivo único
+    filename = f"response_{uuid.uuid4().hex}.mp3"
+    filepath = os.path.join("static", filename) 
+    
+    # Convertir texto a voz con gTTS
+    tts = gTTS(text=text, lang='es', tld='com.mx') # Español de México (puedes cambiarlo)
+    tts.save(filepath)
+    
+    # Devolver la URL del audio al frontend
+    return jsonify({"audio_url": f"/static/{filename}"})
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000, threaded=True)
