@@ -224,6 +224,14 @@ def text_to_speech():
     # Asegúrate de tener una carpeta /static
     os.makedirs("static", exist_ok=True)
     
+    # Borrar archivos TTS anteriores antes de crear uno nuevo
+    for f in os.listdir("static"):
+        if f.startswith("response_") and f.endswith(".mp3"):
+            try:
+                os.remove(os.path.join("static", f))
+            except:
+                pass
+
     # Generar un nombre de archivo único
     filename = f"response_{uuid.uuid4().hex}.mp3"
     filepath = os.path.join("static", filename) 
