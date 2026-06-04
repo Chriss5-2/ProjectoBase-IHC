@@ -1,18 +1,18 @@
 ﻿// =========================================================================
-  // LOGICA PRINCIPAL DE LA APLICACIÃ“N Y CONEXIÃ“N CON EL LLM
+  // LOGICA PRINCIPAL DE LA APLICACIí“N Y CONEXIí“N CON EL LLM
   // =========================================================================
 
   let currentSituation = null;
   let currentCharacter = null;
-  let currentStress = 50; // Puntos de estrÃ©s de 0 a 100
-  let isStressHidden = false; // Estado de la visibilidad de estrÃ©s
+  let currentStress = 50; // Puntos de estrés de 0 a 100
+  let isStressHidden = false; // Estado de la visibilidad de estrés
   
   // Instanciar el cliente LLM global
   const llmClient = new LLMClient('');
 
   function updateGlobalScore() { fetch('/get_progress').then(res => res.json()).then(data => { let scoreLabel = document.getElementById('global-score'); if (!scoreLabel) return; if (!data || data.length === 0) { scoreLabel.innerText = '50 Pts'; return; } let total = 0; data.forEach(row => { total += parseInt(row.Stress) || 50; }); let avg = Math.round(total / data.length); scoreLabel.innerText = avg + ' Pts'; }).catch(e=>console.log(e)); }
 
-  // Al cargar la pÃ¡gina, recuperar la API key si existe
+  // Al cargar la página, recuperar la API key si existe
   document.addEventListener("DOMContentLoaded", () => {
       const savedKey = localStorage.getItem('gemini_api_key');
       if (savedKey) {
@@ -37,7 +37,7 @@
           localStorage.setItem('gemini_api_key', key);
           llmClient.apiKey = key;
           const statusEl = document.getElementById('api-key-status');
-          statusEl.innerText = "Â¡Clave guardada exitosamente!";
+          statusEl.innerText = "¡Clave guardada exitosamente!";
           statusEl.style.color = "var(--green-dark)";
           setTimeout(() => statusEl.innerText = "", 3000);
       }
@@ -65,7 +65,7 @@
       });
   }
 
-  // Seleccionar SituaciÃ³n
+  // Seleccionar Situación
   function selectSituation(sitId) {
       currentSituation = appData.situaciones.find(s => s.id === sitId);
       document.getElementById('sit-title-display').innerText = currentSituation.titulo;
@@ -104,7 +104,7 @@
       document.getElementById('prep-icon-dynamic').className = "fas " + currentCharacter.icono;
 
       const match = currentCharacter.prompt.match(/OBJETIVO:(.*)/);
-      document.getElementById('prep-objective').innerText = match ? match[1].trim() : "Manejar la situaciÃ³n asertivamente.";
+      document.getElementById('prep-objective').innerText = match ? match[1].trim() : "Manejar la situación asertivamente.";
       showView('view-prep');
   }
 
@@ -117,7 +117,7 @@
 
       // Verificar API Key antes de entrar
       if(!llmClient.apiKey) {
-          alert("Â¡Alto! Para interactuar con los personajes necesitas configurar tu API Key de Gemini en los Ajustes.");
+          alert("¡Alto! Para interactuar con los personajes necesitas configurar tu API Key de Gemini en los Ajustes.");
           showView('view-settings');
           return;
       }
@@ -132,7 +132,7 @@
       document.getElementById('chat-history').innerHTML = '';
       document.getElementById('chat-input-text').value = '';
       
-      // Reset BiometrÃ­a (EstrÃ©s) y UI de la Mascota
+      // Reset Biometrí­a (Estrés) y UI de la Mascota
       currentStress = 50;
       updateStressUI();
       document.getElementById('dog').setAttribute('data-emotion', 'neutral');
@@ -140,11 +140,11 @@
 
       showView('view-sim');
 
-      // Generar primera frase pidiÃ©ndole a Gemini que inicie la conversaciÃ³n
-      appendMessage('system', "Iniciando conexiÃ³n neural con el NPC...");
+      // Generar primera frase pidiéndole a Gemini que inicie la conversación
+      appendMessage('system', "Iniciando conexión neural con el NPC...");
       
-      // Mandamos un trigger oculto al LLM para que tire la primera lÃ­nea respetando su prompt
-      llmClient.chat("El usuario acaba de llegar. Tira tu lÃ­nea de diÃ¡logo inicial para empezar el conflicto segÃºn tus reglas. No saludes si eres agresivo.", currentCharacter.prompt)
+      // Mandamos un trigger oculto al LLM para que tire la primera lí­nea respetando su prompt
+      llmClient.chat("El usuario acaba de llegar. Tira tu lí­nea de diálogo inicial para empezar el conflicto según tus reglas. No saludes si eres agresivo.", currentCharacter.prompt)
         .then(reply => {
             document.getElementById('chat-history').innerHTML = ''; // Limpiar mensaje de sistema
             
@@ -159,17 +159,20 @@
         })
         .catch(err => {
             document.getElementById('chat-history').innerHTML = '';
-            appendMessage('system', "Error de conexiÃ³n: " + err.message);
+            appendMessage('system', "Error de conexión: " + err.message);
         });
   }
 
   // Enviar mensaje del usuario a Gemini
   async function sendChatMessage() {
+      if (isSending) return;
       const inputEl = document.getElementById('chat-input-text');
       const text = inputEl.value.trim();
       if(!text) return;
 
-      // AÃ±adir al UI
+      isSending = true;
+
+      // Añadir al UI
       appendMessage('user', text);
       inputEl.value = '';
 
@@ -180,7 +183,7 @@
       try {
           let reply = await llmClient.chat(text, currentCharacter.prompt);
           
-          // Extraer la emociÃ³n detectada por el LLM
+          // Extraer la emoción detectada por el LLM
           const emotionMatch = reply.match(/\[USER_EMOTION:\s*([a-zA-Z]+)\]/i);
           if (emotionMatch) {
               const detectedEmotion = emotionMatch[1].toLowerCase();
@@ -189,7 +192,7 @@
                   let pointsChange = 0;
                   let dogEmotion = 'neutral';
                   
-                  // LÃ³gica de mapeo de EmociÃ³n a EstrÃ©s y Dog Emotion
+                  // Lógica de mapeo de Emoción a Estrés y Dog Emotion
                   switch(detectedEmotion) {
                       case 'angry': pointsChange = 20; dogEmotion = 'fear'; break;
                       case 'happy': pointsChange = -15; dogEmotion = 'happy'; break;
@@ -205,9 +208,9 @@
                   if (currentStress > 100) currentStress = 100;
                   if (currentStress < 0) currentStress = 0;
                   
-                  // Si el estrÃ©s es muy alto, domina el estado de la mascota a asustado/llorando
+                  // Si el estrés es muy alto, domina el estado de la mascota a asustado/llorando
                   if (currentStress >= 80) {
-                      dogEmotion = 'sad'; // Llorando de miedo/estrÃ©s
+                      dogEmotion = 'sad'; // Llorando de miedo/estrés
                   }
                   
                   document.getElementById('dog').setAttribute('data-emotion', dogEmotion);
@@ -229,10 +232,12 @@
       } catch (err) {
           typingInd.style.display = 'none';
           appendMessage('system', "Error: " + err.message);
+      } finally {
+          isSending = false;
       }
   }
 
-  // AÃ±adir globos de chat al HTML
+  // Añadir globos de chat al HTML
   function appendMessage(sender, text) {
       const chatHistory = document.getElementById('chat-history');
       const div = document.createElement('div');
@@ -281,6 +286,7 @@
   // =========================================================================
   let mediaRecorder;
   let audioChunks = [];
+  let isSending = false;
 
   let voiceModeEnabled = true;
 
@@ -311,31 +317,37 @@
   // 0. Helper para reproducir voz del NPC filtrando texto de rol
   function playNPCVoice(text) {
       if (!voiceModeEnabled) return;
-      
-      // Eliminar las acciones de rol entre asteriscos para no leerlas (ej: *suspiro*, *mirando mal*, etc)
+
+      if (currentTTSAbortController) currentTTSAbortController.abort();
+      if (currentNPCAudio) { currentNPCAudio.pause(); currentNPCAudio = null; }
+
       const cleanText = text.replace(/\*([^\*]+)\*/g, '').trim();
-      
-      // Si todo el texto eran acciones y quedó vacío, no hace nada
       if (!cleanText) return;
-      
+
+      currentTTSAbortController = new AbortController();
+
       fetch('/api/tts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: cleanText })
+          body: JSON.stringify({ text: cleanText }),
+          signal: currentTTSAbortController.signal
       })
       .then(res => res.json())
       .then(ttsData => {
           if(ttsData.audio_url) {
-              const audio = new Audio(ttsData.audio_url + '?t=' + new Date().getTime());
-              audio.play();
+              currentNPCAudio = new Audio(ttsData.audio_url + '?t=' + new Date().getTime());
+              currentNPCAudio.play();
           }
       })
-      .catch(err => console.error("Error TTS:", err));
+      .catch(err => {
+          if (err.name !== 'AbortError') console.error("Error TTS:", err);
+      });
   }
 
   // 1. Iniciar grabación al presionar el micrófono
   async function startRecording() {
       if (!voiceModeEnabled) return;
+      if (mediaRecorder && mediaRecorder.state === 'recording') return;
       // Mostrar indicador de grabación
       document.getElementById('recording-indicator').style.display = 'block';
       document.getElementById('record-btn').style.transform = 'scale(1.1)';
@@ -363,6 +375,7 @@
           stream.getTracks().forEach(track => track.stop());
       };
 
+      audioChunks = [];
       mediaRecorder.start();
   }
 
@@ -375,6 +388,8 @@
   // =========================================================================
   
   let menuAudioContext = null;
+  let currentNPCAudio = null;
+  let currentTTSAbortController = null;
   let menuCurrentMode = null;
 
   async function startMenuRecording(mode) {
@@ -660,7 +675,7 @@
   // Finalizar manual o abandonar (reinicia vars y apaga camara)
   function endSimulation(skipSave = false) {
       currentCharacter = null;
-      if (!skipSave) stopCamera();
+      stopCamera();
   }
 
   // 2. El flujo maestro: STT -> Gemini -> TTS
@@ -770,7 +785,7 @@
 
       if(action === 'stop') {
           toast.classList.add('toast-warning');
-          toast.innerHTML = `<i class="fas fa-sign-out-alt"></i> <strong>Cerrando SesiÃ³n...</strong> Procesando puntuaciÃ³n final.`;
+          toast.innerHTML = `<i class="fas fa-sign-out-alt"></i> <strong>Cerrando Sesión...</strong> Procesando puntuación final.`;
           setTimeout(() => { 
               toast.style.display = 'none'; 
               showSimulationResults();
@@ -779,25 +794,25 @@
   }
 
   function showSimulationResults() {
-      // Detener cÃ¡mara si estaba prendida
+      // Detener cámara si estaba prendida
       stopCamera();
       
       // Actualizar vista de resultados
       document.getElementById('result-stress-score').innerText = `${currentStress}/100`;
       
       let msg = "";
-      if (currentStress <= 30) msg = "Â¡Excelente! Manejaste el conflicto con mucha calma.";
-      else if (currentStress <= 70) msg = "Estuviste regular. Sentiste un poco de tensiÃ³n, pero manejable.";
-      else msg = "El estrÃ©s dominÃ³ la conversaciÃ³n. Recuerda, prioriza tomar descansos.";
+      if (currentStress <= 30) msg = "¡Excelente! Manejaste el conflicto con mucha calma.";
+      else if (currentStress <= 70) msg = "Estuviste regular. Sentiste un poco de tensión, pero manejable.";
+      else msg = "El estrés dominóla conversación. Recuerda, prioriza tomar descansos.";
       
       document.getElementById('result-stress-message').innerText = msg;
       
-      // Transferir la Ãºltima emociÃ³n del perro
+      // Transferir la última emoción del perro
       const finalDogEmotion = document.getElementById('dog').getAttribute('data-emotion');
       document.getElementById('result-dog').setAttribute('data-emotion', finalDogEmotion);
       
       // Guardar progreso en el backend
-      const lastChatEmotion = currentCharacter ? currentCharacter.emotion : 'neutral'; // AproximaciÃ³n
+      const lastChatEmotion = currentCharacter ? currentCharacter.emotion : 'neutral'; // Aproximación
       const finalCameraEmotion = document.getElementById('sim-cam-emotion') ? document.getElementById('sim-cam-emotion').innerText : 'neutral';
       
       fetch('/save_progress', {
@@ -810,7 +825,7 @@
               stress: currentStress
           })
       }).then(() => {
-          updateGlobalScore(); // <--- Actualizar el promedio si se guarda una nueva simulaciÃ³n
+          updateGlobalScore(); // <--- Actualizar el promedio si se guarda una nueva simulación
       }).catch(err => console.error("Error al guardar progreso:", err));
 
       currentCharacter = null; 
@@ -821,6 +836,8 @@
   // CONTROL DE VISTAS
   // =========================================================================
   function showView(targetId) {
+    if (menuAudioContext) { menuAudioContext.pause(); menuAudioContext = null; }
+    if (currentNPCAudio) { currentNPCAudio.pause(); currentNPCAudio = null; }
     document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
     document.getElementById(targetId).classList.add('active');
 
@@ -862,7 +879,7 @@
       if (isVideoHidden) {
           videoStream.style.opacity = '0';
           placeholder.style.display = 'block';
-          placeholder.innerText = 'CÃ¡mara oculta (activo)';
+          placeholder.innerText = 'Cámara oculta (activo)';
           btn.innerText = 'Mostrar Video';
       } else {
           videoStream.style.opacity = '1';
@@ -914,7 +931,7 @@
       
       const placeholder = document.getElementById('cameraPlaceholder');
       placeholder.style.display = 'block';
-      placeholder.innerText = 'CÃ¡mara apagada';
+      placeholder.innerText = 'Cámara apagada';
       
       document.getElementById('startBtn').style.display = "inline-block";
       document.getElementById('stopBtn').style.display = "none";
@@ -952,7 +969,7 @@
   }
 
   // =========================================================================
-  // CONFIGURACIÃ“N Y PROGRESO
+  // CONFIGURACIÓN Y PROGRESO
   // =========================================================================
   function toggleDarkMode() {
       document.body.classList.toggle('dark-theme');
@@ -971,7 +988,7 @@
         .then(res => res.json())
         .then(data => {
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center;">AÃºn no hay historial de progreso. Â¡Empieza una simulaciÃ³n!</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center;">Aún no hay historial de progreso. ¡Empieza una simulación!</td></tr>';
                 return;
             }
             tbody.innerHTML = '';
