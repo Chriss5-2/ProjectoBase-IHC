@@ -12,8 +12,22 @@
 
   function updateGlobalScore() { fetch('/get_progress').then(res => res.json()).then(data => { let scoreLabel = document.getElementById('global-score'); if (!scoreLabel) return; if (!data || data.length === 0) { scoreLabel.innerText = '50 Pts'; return; } let total = 0; data.forEach(row => { total += parseInt(row.Stress) || 50; }); let avg = Math.round(total / data.length); scoreLabel.innerText = avg + ' Pts'; }).catch(e=>console.log(e)); }
 
-  // Al cargar la página, recuperar la API key si existe
+  // Al cargar la página, verificar sesión y recuperar la API key si existe
   document.addEventListener("DOMContentLoaded", () => {
+      currentUser = localStorage.getItem('currentUser');
+      
+      if (!currentUser) {
+          // No hay usuario, mostrar login
+          document.getElementById('sidebar-nav').style.display = 'none';
+          document.getElementById('main-header').style.display = 'none';
+          showAuthView('view-login');
+          return;
+      }
+      
+      // Hay usuario, continuar con inicialización normal
+      document.getElementById('sidebar-nav').style.display = 'flex';
+      document.getElementById('main-header').style.display = 'flex';
+      
       const savedKey = localStorage.getItem('gemini_api_key');
       if (savedKey) {
           document.getElementById('api-key-input').value = savedKey;
@@ -25,6 +39,7 @@
       }
       updateVoiceBtnUI();
       
+      updateUserDisplay(); // Mostrar saludo con el nombre del usuario
       renderSituations();
       updateGlobalScore(); // <--- Llamar al promedio del puntaje global al iniciar
       showView('view-home');
@@ -1019,3 +1034,170 @@
           loadProgress();
       }
   };
+
+  // =========================================================================
+  // SISTEMA DE AUTENTICACIÓN
+  // =========================================================================
+  let currentUser = null;
+
+  // Mostrar/cambiar entre login y register
+  function showAuthView(targetId) {
+      document.querySelectorAll('.view').forEach(view => {
+          if (view.id === 'view-login' || view.id === 'view-register') {
+              view.classList.remove('active');
+          }
+      });
+      document.getElementById(targetId).classList.add('active');
+  }
+
+  // Manejar Login
+  async function handleLogin() {
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+      const errorMsg = document.getElementById('login-error-msg');
+
+      // Validar campos vacíos
+      if (!username || !password) {
+          errorMsg.style.display = 'block';
+          errorMsg.innerText = '⚠️ Usuario y contraseña son requeridos.';
+          return;
+      }
+
+      try {
+          const response = await fetch('/api/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username, password })
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.status === 'success') {
+              // Login exitoso
+              localStorage.setItem('currentUser', username);
+              currentUser = username;
+              errorMsg.style.display = 'none';
+              
+              // Limpiar campos
+              document.getElementById('login-username').value = '';
+              document.getElementById('login-password').value = '';
+
+              // Mostrar app
+              document.getElementById('sidebar-nav').style.display = 'flex';
+              document.getElementById('main-header').style.display = 'flex';
+              updateUserDisplay();
+              
+              // Mostrar vista de home
+              renderSituations();
+              updateGlobalScore();
+              showView('view-home');
+          } else {
+              // Error en login
+              errorMsg.style.display = 'block';
+              errorMsg.innerText = '❌ ' + (data.message || 'Error al iniciar sesión');
+          }
+      } catch (error) {
+          console.error('Error:', error);
+          errorMsg.style.display = 'block';
+          errorMsg.innerText = '❌ Error de conexión. Intenta nuevamente.';
+      }
+  }
+
+  // Manejar Registro
+  async function handleRegister() {
+      const username = document.getElementById('register-username').value.trim();
+      const password = document.getElementById('register-password').value.trim();
+      const errorMsg = document.getElementById('register-error-msg');
+      const successMsg = document.getElementById('register-success-msg');
+
+      // Limpiar mensajes previos
+      errorMsg.style.display = 'none';
+      successMsg.style.display = 'none';
+
+      // Validar campos vacíos
+      if (!username || !password) {
+          errorMsg.style.display = 'block';
+          errorMsg.innerText = '⚠️ Usuario y contraseña son requeridos.';
+          return;
+      }
+
+      // Validar longitud mínima
+      if (username.length < 3) {
+          errorMsg.style.display = 'block';
+          errorMsg.innerText = '⚠️ El usuario debe tener al menos 3 caracteres.';
+          return;
+      }
+
+      if (password.length < 4) {
+          errorMsg.style.display = 'block';
+          errorMsg.innerText = '⚠️ La contraseña debe tener al menos 4 caracteres.';
+          return;
+      }
+
+      try {
+          const response = await fetch('/api/register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username, password })
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.status === 'success') {
+              // Registro exitoso
+              successMsg.style.display = 'block';
+              successMsg.innerText = '✅ ' + data.message;
+              
+              // Limpiar campos
+              document.getElementById('register-username').value = '';
+              document.getElementById('register-password').value = '';
+
+              // Redirigir a login después de 2 segundos
+              setTimeout(() => {
+                  showAuthView('view-login');
+                  document.getElementById('login-username').focus();
+              }, 2000);
+          } else {
+              // Error en registro
+              errorMsg.style.display = 'block';
+              errorMsg.innerText = '❌ ' + (data.message || 'Error al registrarse');
+          }
+      } catch (error) {
+          console.error('Error:', error);
+          errorMsg.style.display = 'block';
+          errorMsg.innerText = '❌ Error de conexión. Intenta nuevamente.';
+      }
+  }
+
+  // Actualizar display del usuario en el header
+  function updateUserDisplay() {
+      const greetingEl = document.getElementById('user-greeting');
+      if (greetingEl && currentUser) {
+          greetingEl.innerText = `Hola, ${currentUser}`;
+      }
+  }
+
+  // Logout - Cerrar sesión
+  function logout() {
+      if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+          localStorage.removeItem('currentUser');
+          currentUser = null;
+          
+          // Limpiar datos de sesión
+          document.getElementById('login-username').value = '';
+          document.getElementById('login-password').value = '';
+          document.getElementById('register-username').value = '';
+          document.getElementById('register-password').value = '';
+          document.getElementById('login-error-msg').style.display = 'none';
+          document.getElementById('register-error-msg').style.display = 'none';
+          document.getElementById('register-success-msg').style.display = 'none';
+          document.getElementById('user-greeting').innerText = '';
+
+          // Ocultar app
+          document.getElementById('sidebar-nav').style.display = 'none';
+          document.getElementById('main-header').style.display = 'none';
+          
+          // Mostrar login
+          showAuthView('view-login');
+      }
+  }

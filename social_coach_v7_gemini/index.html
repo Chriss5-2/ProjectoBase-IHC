@@ -15,6 +15,7 @@
   <nav class="app-nav" id="sidebar-nav">
     <div class="app-logo-sidebar">
       <div class="app-logo">Social<br>Coach</div>
+      <div id="user-greeting" style="font-size: 13px; color: var(--text-muted); margin-top: 12px; text-align: center; font-weight: 500;"></div>
     </div>
     <a href="#" class="nav-item active" data-target="view-home" onclick="showView('view-home')">
       <i class="fas fa-home nav-icon"></i>
@@ -37,20 +38,76 @@
         <div class="header-left">
           <h2 id="page-title" style="color: var(--primary); font-size: 20px;">Inicio</h2>
         </div>
-        <div class="header-right-dynamic" id="header-badge">
+        <div class="header-right-dynamic" id="header-badge" style="display: flex; align-items: center; gap: 20px;">
           <div class="empathy-badge">
               <i class="fas fa-heart" style="color: #2b5b3e;"></i> 
               <span id="global-score">450 Pts</span>
           </div>
+          <button class="btn-icon" onclick="logout()" title="Cerrar sesión" style="color: #b91c1c;">
+              <i class="fas fa-sign-out-alt"></i>
+          </button>
         </div>
       </header>
 
       <main class="app-content">
         
         <!-- ========================================== -->
+        <!-- VISTA 0: LOGIN                             -->
+        <!-- ========================================== -->
+        <section id="view-login" class="view active">
+          <div class="desktop-centered-card" style="max-width: 500px; text-align: center;">
+            <div style="margin-bottom: 32px;">
+              <h1 style="color: var(--primary); font-size: 36px; margin-bottom: 8px;">Social Coach</h1>
+              <p style="color: var(--text-muted); font-size: 16px;">Iniciar Sesión</p>
+            </div>
+            
+            <div id="login-error-msg" style="display: none; background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;"></div>
+            
+            <div style="text-align: left; margin-bottom: 16px;">
+              <label style="font-size: 14px; font-weight: bold; color: var(--text-color); display: block; margin-bottom: 8px;">Usuario</label>
+              <input type="text" id="login-username" placeholder="Tu usuario" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px;">
+            </div>
+            <div style="text-align: left; margin-bottom: 24px;">
+              <label style="font-size: 14px; font-weight: bold; color: var(--text-color); display: block; margin-bottom: 8px;">Contraseña</label>
+              <input type="password" id="login-password" placeholder="Tu contraseña" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px;" onkeypress="if(event.key === 'Enter') handleLogin()">
+            </div>
+            
+            <button class="btn btn-primary hoverable" style="width: 100%; padding: 16px; font-size: 18px; margin-bottom: 16px;" onclick="handleLogin()">Ingresar</button>
+            <p style="font-size: 14px; color: var(--text-muted);">¿No tienes cuenta? <a href="#" style="color: var(--primary); font-weight: bold; text-decoration: none;" onclick="showAuthView('view-register')">Regístrate aquí</a></p>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VISTA 0.1: REGISTRO                        -->
+        <!-- ========================================== -->
+        <section id="view-register" class="view">
+          <div class="desktop-centered-card" style="max-width: 500px; text-align: center;">
+            <div style="margin-bottom: 32px;">
+              <h1 style="color: var(--primary); font-size: 36px; margin-bottom: 8px;">Social Coach</h1>
+              <p style="color: var(--text-muted); font-size: 16px;">Crear Cuenta Nueva</p>
+            </div>
+            
+            <div id="register-error-msg" style="display: none; background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;"></div>
+            <div id="register-success-msg" style="display: none; background: #d1fae5; color: #065f46; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;"></div>
+            
+            <div style="text-align: left; margin-bottom: 16px;">
+              <label style="font-size: 14px; font-weight: bold; color: var(--text-color); display: block; margin-bottom: 8px;">Usuario</label>
+              <input type="text" id="register-username" placeholder="Elige un usuario" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px;">
+            </div>
+            <div style="text-align: left; margin-bottom: 24px;">
+              <label style="font-size: 14px; font-weight: bold; color: var(--text-color); display: block; margin-bottom: 8px;">Contraseña</label>
+              <input type="password" id="register-password" placeholder="Crea una contraseña" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px;" onkeypress="if(event.key === 'Enter') handleRegister()">
+            </div>
+            
+            <button class="btn btn-primary hoverable" style="width: 100%; padding: 16px; font-size: 18px; margin-bottom: 16px;" onclick="handleRegister()">Registrarse</button>
+            <p style="font-size: 14px; color: var(--text-muted);">¿Ya tienes cuenta? <a href="#" style="color: var(--primary); font-weight: bold; text-decoration: none;" onclick="showAuthView('view-login')">Inicia sesión</a></p>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
         <!-- VISTA 1: SELECCIÓN DE SITUACIÓN (HUB)      -->
         <!-- ========================================== -->
-        <section id="view-home" class="view active">
+        <section id="view-home" class="view">
           <div style="max-width: 900px; margin: 0 auto; position: relative;">
               <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>

@@ -123,6 +123,59 @@ def stop_camera():
     camera_active = False # Esto rompe el bucle en gen_frames y apaga la luz de la cámara
     return jsonify({"status": "stopped"})
 
+USERS_FILE = 'users.csv'
+
+@app.route('/api/register', methods=['POST'])
+def register():
+    data = request.json
+    username = data.get('username', '').strip()
+    password = data.get('password', '').strip()
+    
+    if not username or not password:
+        return jsonify({"status": "error", "message": "Usuario y contraseña son requeridos."}), 400
+        
+    file_exists = os.path.isfile(USERS_FILE)
+    
+    # Check if user exists
+    if file_exists:
+        with open(USERS_FILE, mode='r', encoding='utf-8-sig') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row.get('username') == username:
+                    return jsonify({"status": "error", "message": "El usuario ya existe."}), 400
+                    
+    # Save the new user
+    with open(USERS_FILE, mode='a', newline='', encoding='utf-8-sig') as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(['username', 'password'])
+        writer.writerow([username, password])
+        
+    return jsonify({"status": "success", "message": "Usuario registrado exitosamente."})
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username', '').strip()
+    password = data.get('password', '').strip()
+    
+    if not username or not password:
+        return jsonify({"status": "error", "message": "Usuario y contraseña son requeridos."}), 400
+        
+    if not os.path.isfile(USERS_FILE):
+        return jsonify({"status": "error", "message": "Usuario no encontrado."}), 404
+        
+    with open(USERS_FILE, mode='r', encoding='utf-8-sig') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row.get('username') == username:
+                if row.get('password') == password:
+                    return jsonify({"status": "success", "message": "Ingreso exitoso."})
+                else:
+                    return jsonify({"status": "error", "message": "Contraseña incorrecta."}), 401
+                    
+    return jsonify({"status": "error", "message": "Usuario no encontrado."}), 404
+
 PROGRESS_FILE = 'progress.csv'
 
 @app.route('/save_progress', methods=['POST'])
