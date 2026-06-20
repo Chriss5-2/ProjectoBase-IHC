@@ -176,6 +176,51 @@ def login():
                     
     return jsonify({"status": "error", "message": "Usuario no encontrado."}), 404
 
+DELETED_ACCOUNTS_FILE = 'cuentas_eliminadas.csv'
+
+@app.route('/api/delete-account', methods=['POST'])
+def delete_account():
+    data = request.json
+    username = data.get('username', '').strip()
+    
+    if not username:
+        return jsonify({"status": "error", "message": "Usuario requerido."}), 400
+    
+    if not os.path.isfile(USERS_FILE):
+        return jsonify({"status": "error", "message": "Usuario no encontrado."}), 404
+    
+    # Buscar la contraseña del usuario a eliminar
+    user_password = None
+    users_data = []
+    
+    with open(USERS_FILE, mode='r', encoding='utf-8-sig') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row.get('username') == username:
+                user_password = row.get('password')
+            else:
+                users_data.append(row)
+    
+    if user_password is None:
+        return jsonify({"status": "error", "message": "Usuario no encontrado."}), 404
+    
+    # Guardar en cuentas_eliminadas.csv
+    file_exists = os.path.isfile(DELETED_ACCOUNTS_FILE)
+    with open(DELETED_ACCOUNTS_FILE, mode='a', newline='', encoding='utf-8-sig') as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(['username', 'password', 'fecha_eliminacion'])
+        writer.writerow([username, user_password, datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
+    
+    # Reescribir users.csv sin el usuario eliminado
+    with open(USERS_FILE, mode='w', newline='', encoding='utf-8-sig') as f:
+        writer = csv.DictWriter(f, fieldnames=['username', 'password'])
+        writer.writeheader()
+        for row in users_data:
+            writer.writerow(row)
+    
+    return jsonify({"status": "success", "message": "Cuenta eliminada exitosamente."})
+
 PROGRESS_FILE = 'progress.csv'
 
 @app.route('/save_progress', methods=['POST'])

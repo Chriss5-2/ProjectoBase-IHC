@@ -1201,3 +1201,53 @@
           showAuthView('view-login');
       }
   }
+
+  // Eliminar Cuenta
+  async function handleDeleteAccount() {
+      const confirmDelete = confirm('⚠️ ADVERTENCIA: Estás a punto de eliminar tu cuenta.\n\n¿Realmente deseas continuar? Esta acción NO se puede deshacer.');
+      
+      if (!confirmDelete) {
+          return;
+      }
+
+      const confirmAgain = confirm('Esta es tu ÚLTIMA oportunidad.\n\n¿Estás completamente seguro de que deseas eliminar tu cuenta permanentemente?');
+      
+      if (!confirmAgain) {
+          return;
+      }
+
+      try {
+          const response = await fetch('/api/delete-account', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username: currentUser })
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.status === 'success') {
+              alert('✓ Tu cuenta ha sido eliminada exitosamente.');
+              
+              // Limpiar sesión
+              localStorage.removeItem('currentUser');
+              currentUser = null;
+              
+              // Limpiar formularios
+              document.getElementById('login-username').value = '';
+              document.getElementById('login-password').value = '';
+              document.getElementById('register-username').value = '';
+              document.getElementById('register-password').value = '';
+              document.getElementById('user-greeting').innerText = '';
+
+              // Ocultar app y volver a login
+              document.getElementById('sidebar-nav').style.display = 'none';
+              document.getElementById('main-header').style.display = 'none';
+              showAuthView('view-login');
+          } else {
+              alert('❌ ' + (data.message || 'Error al eliminar la cuenta'));
+          }
+      } catch (error) {
+          console.error('Error:', error);
+          alert('❌ Error de conexión. Intenta nuevamente.');
+      }
+  }
