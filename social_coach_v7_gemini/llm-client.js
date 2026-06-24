@@ -27,7 +27,7 @@ class LLMClient {
         const url = `${this.baseUrl}/${this.modelName}:generateContent?key=${this.apiKey}`;
         const temp = temperature !== null ? temperature : this.temperature;
 
-        const enhancedSystemPrompt = systemPrompt + "\n\nINSTRUCCIÓN OBLIGATORIA: Primero, NO uses emojis bajo ninguna circunstancia. Segundo, analiza el último mensaje del usuario para detectar su emoción. Al final exacto de tu respuesta (en tu última línea y separado por un salto de línea), DEBES incluir el tag [USER_EMOTION:emocion_en_ingles] eligiendo SOLO UNA de este listado: happy, sad, angry, fear, surprise, disgust (Evita escoger 'neutral', intenta siempre asignarle una de las otras actitudes basado en si su comportamiento es positivo, negativo o cuestionable).";
+        const enhancedSystemPrompt = systemPrompt + "\n\nINSTRUCCIÓN OBLIGATORIA: Sigue este orden estrictamente: (1) NO uses emojis. (2) Escribe tu respuesta como personaje, terminando TODAS tus oraciones de forma completa. (3) Solo cuando hayas terminado completamente tu respuesta, añade una línea nueva con ÚNICAMENTE el tag de emoción. NUNCA interrumpas una oración con el tag. Formato obligatorio:\n[tu respuesta completa]\n[USER_EMOTION:emocion]\nEmociones válidas: happy, sad, angry, fear, surprise, disgust.";
 
         // Construir el cuerpo de la solicitud
         const requestBody = {
