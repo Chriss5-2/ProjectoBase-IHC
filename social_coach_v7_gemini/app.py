@@ -123,6 +123,104 @@ def stop_camera():
     camera_active = False # Esto rompe el bucle en gen_frames y apaga la luz de la cámara
     return jsonify({"status": "stopped"})
 
+USERS_FILE = 'users.csv'
+
+@app.route('/api/register', methods=['POST'])
+def register():
+    data = request.json
+    username = data.get('username', '').strip()
+    password = data.get('password', '').strip()
+    
+    if not username or not password:
+        return jsonify({"status": "error", "message": "Usuario y contraseña son requeridos."}), 400
+        
+    file_exists = os.path.isfile(USERS_FILE)
+    
+    # Check if user exists
+    if file_exists:
+        with open(USERS_FILE, mode='r', encoding='utf-8-sig') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row.get('username') == username:
+                    return jsonify({"status": "error", "message": "El usuario ya existe."}), 400
+                    
+    # Save the new user
+    with open(USERS_FILE, mode='a', newline='', encoding='utf-8-sig') as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(['username', 'password'])
+        writer.writerow([username, password])
+        
+    return jsonify({"status": "success", "message": "Usuario registrado exitosamente."})
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username', '').strip()
+    password = data.get('password', '').strip()
+    
+    if not username or not password:
+        return jsonify({"status": "error", "message": "Usuario y contraseña son requeridos."}), 400
+        
+    if not os.path.isfile(USERS_FILE):
+        return jsonify({"status": "error", "message": "Usuario no encontrado."}), 404
+        
+    with open(USERS_FILE, mode='r', encoding='utf-8-sig') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row.get('username') == username:
+                if row.get('password') == password:
+                    return jsonify({"status": "success", "message": "Ingreso exitoso."})
+                else:
+                    return jsonify({"status": "error", "message": "Contraseña incorrecta."}), 401
+                    
+    return jsonify({"status": "error", "message": "Usuario no encontrado."}), 404
+
+DELETED_ACCOUNTS_FILE = 'cuentas_eliminadas.csv'
+
+@app.route('/api/delete-account', methods=['POST'])
+def delete_account():
+    data = request.json
+    username = data.get('username', '').strip()
+    
+    if not username:
+        return jsonify({"status": "error", "message": "Usuario requerido."}), 400
+    
+    if not os.path.isfile(USERS_FILE):
+        return jsonify({"status": "error", "message": "Usuario no encontrado."}), 404
+    
+    # Buscar la contraseña del usuario a eliminar
+    user_password = None
+    users_data = []
+    
+    with open(USERS_FILE, mode='r', encoding='utf-8-sig') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row.get('username') == username:
+                user_password = row.get('password')
+            else:
+                users_data.append(row)
+    
+    if user_password is None:
+        return jsonify({"status": "error", "message": "Usuario no encontrado."}), 404
+    
+    # Guardar en cuentas_eliminadas.csv
+    file_exists = os.path.isfile(DELETED_ACCOUNTS_FILE)
+    with open(DELETED_ACCOUNTS_FILE, mode='a', newline='', encoding='utf-8-sig') as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(['username', 'password', 'fecha_eliminacion'])
+        writer.writerow([username, user_password, datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
+    
+    # Reescribir users.csv sin el usuario eliminado
+    with open(USERS_FILE, mode='w', newline='', encoding='utf-8-sig') as f:
+        writer = csv.DictWriter(f, fieldnames=['username', 'password'])
+        writer.writeheader()
+        for row in users_data:
+            writer.writerow(row)
+    
+    return jsonify({"status": "success", "message": "Cuenta eliminada exitosamente."})
+
 PROGRESS_FILE = 'progress.csv'
 
 @app.route('/save_progress', methods=['POST'])
@@ -242,6 +340,85 @@ def text_to_speech():
     
     # Devolver la URL del audio al frontend
     return jsonify({"audio_url": f"/static/{filename}"})
+
+FORUM_POSTS_FILE = 'forum_posts.csv'
+FORUM_COMMENTS_FILE = 'forum_comments.csv'
+
+@app.route('/api/forum', methods=['GET'])
+def get_forum_posts():
+    comment_counts = {}
+    if os.path.isfile(FORUM_COMMENTS_FILE):
+        with open(FORUM_COMMENTS_FILE, mode='r', encoding='utf-8-sig') as f:
+            for row in csv.DictReader(f):
+                pid = row.get('post_id', '')
+                comment_counts[pid] = comment_counts.get(pid, 0) + 1
+
+    if not os.path.isfile(FORUM_POSTS_FILE):
+        return jsonify([])
+
+    posts = []
+    with open(FORUM_POSTS_FILE, mode='r', encoding='utf-8-sig') as f:
+        for row in csv.DictReader(f):
+            row['comentarios'] = comment_counts.get(row.get('id', ''), 0)
+            posts.append(row)
+
+    return jsonify(list(reversed(posts)))
+
+@app.route('/api/forum', methods=['POST'])
+def create_forum_post():
+    data = request.json
+    username = data.get('username', '').strip()
+    titulo = data.get('titulo', '').strip()
+    contenido = data.get('contenido', '').strip()
+
+    if not username or not titulo or not contenido:
+        return jsonify({"status": "error", "message": "Todos los campos son requeridos."}), 400
+
+    post_id = str(uuid.uuid4())[:8]
+    fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    file_exists = os.path.isfile(FORUM_POSTS_FILE)
+    with open(FORUM_POSTS_FILE, mode='a', newline='', encoding='utf-8-sig') as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(['id', 'username', 'titulo', 'contenido', 'fecha'])
+        writer.writerow([post_id, username, titulo, contenido, fecha])
+
+    return jsonify({"status": "success", "id": post_id})
+
+@app.route('/api/forum/<post_id>/comments', methods=['GET'])
+def get_comments(post_id):
+    if not os.path.isfile(FORUM_COMMENTS_FILE):
+        return jsonify([])
+
+    comments = []
+    with open(FORUM_COMMENTS_FILE, mode='r', encoding='utf-8-sig') as f:
+        for row in csv.DictReader(f):
+            if row.get('post_id') == post_id:
+                comments.append(row)
+
+    return jsonify(comments)
+
+@app.route('/api/forum/<post_id>/comments', methods=['POST'])
+def add_comment(post_id):
+    data = request.json
+    username = data.get('username', '').strip()
+    comentario = data.get('comentario', '').strip()
+
+    if not username or not comentario:
+        return jsonify({"status": "error", "message": "Todos los campos son requeridos."}), 400
+
+    comment_id = str(uuid.uuid4())[:8]
+    fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    file_exists = os.path.isfile(FORUM_COMMENTS_FILE)
+    with open(FORUM_COMMENTS_FILE, mode='a', newline='', encoding='utf-8-sig') as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(['id', 'post_id', 'username', 'comentario', 'fecha'])
+        writer.writerow([comment_id, post_id, username, comentario, fecha])
+
+    return jsonify({"status": "success", "id": comment_id})
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000, threaded=True)
