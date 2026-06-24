@@ -406,6 +406,7 @@
   let currentNPCAudio = null;
   let currentTTSAbortController = null;
   let menuCurrentMode = null;
+  let forumVoiceStep = null; // null | 'waiting_title' | 'waiting_content' | 'waiting_confirm'
 
   async function startMenuRecording(mode) {
       if (!voiceModeEnabled) return;
@@ -417,6 +418,7 @@
       else if (mode === 'pause') btnPrefix = 'menu-pause';
       else if (mode === 'settings') btnPrefix = 'menu-settings';
       else if (mode === 'meter') btnPrefix = 'menu-meter';
+      else if (mode === 'forum') btnPrefix = 'menu-forum';
       
       document.getElementById(`${btnPrefix}-indicator`).style.display = 'block';
       document.getElementById(`${btnPrefix}-record-btn`).style.transform = 'scale(1.1)';
@@ -485,6 +487,11 @@
                       replyToSpeak = "Regresando a la selección de participantes.";
                       shouldNavigateTo = 'back_to_characters';
                   } else if (mode === 'settings' || mode === 'meter') {
+                      replyToSpeak = "Volviendo al menú principal.";
+                      shouldNavigateTo = 'back_to_home';
+                  } else if (mode === 'forum') {
+                      forumVoiceStep = null;
+                      document.getElementById('forum-form').style.display = 'none';
                       replyToSpeak = "Volviendo al menú principal.";
                       shouldNavigateTo = 'back_to_home';
                   } else if (mode === 'pause') {
@@ -603,6 +610,81 @@
                   } else {
                       replyToSpeak = "Puedes decir leer promedio, o volver.";
                   }
+              } else if (mode === 'forum') {
+                  if (forumVoiceStep === 'waiting_title') {
+                      if (normText.includes("cancelar")) {
+                          forumVoiceStep = null;
+                          document.getElementById('forum-form').style.display = 'none';
+                          document.getElementById('forum-titulo').value = '';
+                          replyToSpeak = "Post cancelado.";
+                      } else {
+                          document.getElementById('forum-titulo').value = sttData.text;
+                          forumVoiceStep = 'waiting_content';
+                          replyToSpeak = "Título guardado: " + sttData.text + ". Ahora dime el contenido de tu post.";
+                      }
+                  } else if (forumVoiceStep === 'waiting_content') {
+                      if (normText.includes("cancelar")) {
+                          forumVoiceStep = null;
+                          document.getElementById('forum-form').style.display = 'none';
+                          document.getElementById('forum-titulo').value = '';
+                          document.getElementById('forum-contenido').value = '';
+                          replyToSpeak = "Post cancelado.";
+                      } else {
+                          document.getElementById('forum-contenido').value = sttData.text;
+                          forumVoiceStep = 'waiting_confirm';
+                          replyToSpeak = "Contenido guardado. ¿Deseas publicar el post? Di sí para confirmar, o cancelar para salir.";
+                      }
+                  } else if (forumVoiceStep === 'waiting_confirm') {
+                      if (isYesAction || normText.includes("publicar") || normText.includes("confirmar")) {
+                          forumVoiceStep = null;
+                          const titulo = document.getElementById('forum-titulo').value.trim();
+                          const contenido = document.getElementById('forum-contenido').value.trim();
+                          const username = localStorage.getItem('currentUser') || 'Anónimo';
+                          try {
+                              const res = await fetch('/api/forum', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ username, titulo, contenido })
+                              });
+                              const postData = await res.json();
+                              if (postData.status === 'success') {
+                                  document.getElementById('forum-titulo').value = '';
+                                  document.getElementById('forum-contenido').value = '';
+                                  document.getElementById('forum-form').style.display = 'none';
+                                  loadForum();
+                                  replyToSpeak = "Post publicado exitosamente en el foro.";
+                              } else {
+                                  replyToSpeak = "No se pudo publicar el post. Inténtalo nuevamente.";
+                              }
+                          } catch (e) {
+                              replyToSpeak = "Error de conexión al publicar.";
+                          }
+                      } else if (isNoAction || normText.includes("cancelar")) {
+                          forumVoiceStep = null;
+                          document.getElementById('forum-form').style.display = 'none';
+                          document.getElementById('forum-titulo').value = '';
+                          document.getElementById('forum-contenido').value = '';
+                          replyToSpeak = "Post cancelado.";
+                      } else {
+                          replyToSpeak = "Di sí para publicar, o cancelar para salir.";
+                      }
+                  } else {
+                      if (normText.includes("nuevo") || normText.includes("crear") || normText.includes("escribir") || normText.includes("post") || normText.includes("publicar")) {
+                          forumVoiceStep = 'waiting_title';
+                          document.getElementById('forum-form').style.display = 'block';
+                          document.getElementById('forum-titulo').value = '';
+                          document.getElementById('forum-contenido').value = '';
+                          document.getElementById('forum-titulo').focus();
+                          replyToSpeak = "Perfecto. Dime el título de tu post.";
+                      } else if (normText.includes("actualizar") || normText.includes("recargar") || normText.includes("refrescar")) {
+                          loadForum();
+                          replyToSpeak = "Foro actualizado.";
+                      } else if (isListAction || isRepeatAction) {
+                          replyToSpeak = "Estás en el Foro Comunitario. Puedes decir: nuevo post, actualizar, o volver.";
+                      } else {
+                          replyToSpeak = "Comandos disponibles: nuevo post, actualizar, o volver.";
+                      }
+                  }
               }
 
               // 3. TTS: Hacemos que Python hable la respuesta decidida
@@ -684,6 +766,9 @@
           playNPCVoice("Panel de Configuración. Comandos de voz: modo noche, tamaño grande, normal o pequeño.");
       } else if (view === 'view-meter') {
           playNPCVoice("Historial de progreso. Puedes decir leer promedio.");
+      } else if (view === 'view-forum') {
+          forumVoiceStep = null;
+          playNPCVoice("Foro comunitario. Mantén presionado el micrófono y di nuevo post para crear una publicación, actualizar para recargar, o volver para salir.");
       }
   }
 
@@ -851,8 +936,7 @@
   // CONTROL DE VISTAS
   // =========================================================================
   function showView(targetId) {
-    if (menuAudioContext) { menuAudioContext.pause(); menuAudioContext = null; }
-    if (currentNPCAudio) { currentNPCAudio.pause(); currentNPCAudio = null; }
+    stopAllAudio();
     document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
     document.getElementById(targetId).classList.add('active');
 
@@ -1041,11 +1125,16 @@
   let currentUser = null;
 
   // Mostrar/cambiar entre login y register
+  function stopAllAudio() {
+      if (currentTTSAbortController) { currentTTSAbortController.abort(); currentTTSAbortController = null; }
+      if (currentNPCAudio) { currentNPCAudio.pause(); currentNPCAudio.src = ''; currentNPCAudio = null; }
+      if (menuAudioContext) { menuAudioContext.pause(); menuAudioContext.src = ''; menuAudioContext = null; }
+  }
+
   function showAuthView(targetId) {
+      stopAllAudio();
       document.querySelectorAll('.view').forEach(view => {
-          if (view.id === 'view-login' || view.id === 'view-register') {
-              view.classList.remove('active');
-          }
+          view.classList.remove('active');
       });
       document.getElementById(targetId).classList.add('active');
   }
@@ -1250,4 +1339,148 @@
           console.error('Error:', error);
           alert('❌ Error de conexión. Intenta nuevamente.');
       }
-  }
+}
+
+// ============================================================
+// MÓDULO FORO
+// ============================================================
+
+function toggleForumForm() {
+    const form = document.getElementById('forum-form');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    if (form.style.display === 'block') {
+        document.getElementById('forum-titulo').focus();
+    }
+}
+
+async function loadForum() {
+    const list = document.getElementById('forum-list');
+    list.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Cargando posts...</p>';
+    try {
+        const res = await fetch('/api/forum');
+        const posts = await res.json();
+        if (posts.length === 0) {
+            list.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Aún no hay posts. ¡Sé el primero en publicar!</p>';
+            return;
+        }
+        list.innerHTML = posts.map(p => `
+            <div class="card forum-post">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <strong style="font-size: 16px;">${escapeHtml(p.titulo)}</strong>
+                    <span style="font-size: 12px; color: var(--text-muted); white-space: nowrap; margin-left: 12px;">${p.fecha}</span>
+                </div>
+                <p style="margin: 0 0 12px 0; color: var(--text-main); line-height: 1.6;">${escapeHtml(p.contenido)}</p>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 13px; color: var(--text-muted);">👤 ${escapeHtml(p.username)}</span>
+                    <button class="btn" style="font-size: 13px; padding: 6px 14px; background: var(--bg-color); border: 1px solid var(--border-color);"
+                        onclick="toggleComments('${p.id}')">
+                        💬 ${p.comentarios} comentario${p.comentarios !== 1 ? 's' : ''}
+                    </button>
+                </div>
+                <div id="comments-${p.id}" class="forum-comments-section" style="display: none; margin-top: 16px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+                    <div id="comments-list-${p.id}"></div>
+                    <div style="display: flex; gap: 8px; margin-top: 12px;">
+                        <input id="comment-input-${p.id}" type="text" placeholder="Escribe un comentario..."
+                            style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 13px; background: var(--bg-color); color: var(--text-main);"
+                            onkeydown="if(event.key==='Enter') submitComment('${p.id}')">
+                        <button class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;" onclick="submitComment('${p.id}')">Enviar</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        list.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Error al cargar el foro.</p>';
+    }
+}
+
+async function submitPost() {
+    const titulo = document.getElementById('forum-titulo').value.trim();
+    const contenido = document.getElementById('forum-contenido').value.trim();
+    const username = localStorage.getItem('currentUser') || 'Anónimo';
+
+    if (!titulo || !contenido) {
+        alert('Por favor completa el título y el mensaje.');
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/forum', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, titulo, contenido })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+            document.getElementById('forum-titulo').value = '';
+            document.getElementById('forum-contenido').value = '';
+            toggleForumForm();
+            loadForum();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch (e) {
+        alert('Error de conexión.');
+    }
+}
+
+async function toggleComments(postId) {
+    const section = document.getElementById(`comments-${postId}`);
+    const isVisible = section.style.display !== 'none';
+    section.style.display = isVisible ? 'none' : 'block';
+    if (!isVisible) {
+        await loadComments(postId);
+    }
+}
+
+async function loadComments(postId) {
+    const listEl = document.getElementById(`comments-list-${postId}`);
+    listEl.innerHTML = '<p style="font-size: 13px; color: var(--text-muted);">Cargando...</p>';
+    try {
+        const res = await fetch(`/api/forum/${postId}/comments`);
+        const comments = await res.json();
+        if (comments.length === 0) {
+            listEl.innerHTML = '<p style="font-size: 13px; color: var(--text-muted);">Sin comentarios aún.</p>';
+            return;
+        }
+        listEl.innerHTML = comments.map(c => `
+            <div class="forum-comment">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <strong style="font-size: 13px;">👤 ${escapeHtml(c.username)}</strong>
+                    <span style="font-size: 11px; color: var(--text-muted);">${c.fecha}</span>
+                </div>
+                <p style="margin: 0; font-size: 14px; color: var(--text-main);">${escapeHtml(c.comentario)}</p>
+            </div>
+        `).join('');
+    } catch (e) {
+        listEl.innerHTML = '<p style="font-size: 13px; color: var(--text-muted);">Error al cargar comentarios.</p>';
+    }
+}
+
+async function submitComment(postId) {
+    const input = document.getElementById(`comment-input-${postId}`);
+    const comentario = input.value.trim();
+    const username = localStorage.getItem('currentUser') || 'Anónimo';
+
+    if (!comentario) return;
+
+    try {
+        const res = await fetch(`/api/forum/${postId}/comments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, comentario })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+            input.value = '';
+            await loadComments(postId);
+        }
+    } catch (e) {
+        alert('Error de conexión.');
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(String(text)));
+    return div.innerHTML;
+}

@@ -341,5 +341,84 @@ def text_to_speech():
     # Devolver la URL del audio al frontend
     return jsonify({"audio_url": f"/static/{filename}"})
 
+FORUM_POSTS_FILE = 'forum_posts.csv'
+FORUM_COMMENTS_FILE = 'forum_comments.csv'
+
+@app.route('/api/forum', methods=['GET'])
+def get_forum_posts():
+    comment_counts = {}
+    if os.path.isfile(FORUM_COMMENTS_FILE):
+        with open(FORUM_COMMENTS_FILE, mode='r', encoding='utf-8-sig') as f:
+            for row in csv.DictReader(f):
+                pid = row.get('post_id', '')
+                comment_counts[pid] = comment_counts.get(pid, 0) + 1
+
+    if not os.path.isfile(FORUM_POSTS_FILE):
+        return jsonify([])
+
+    posts = []
+    with open(FORUM_POSTS_FILE, mode='r', encoding='utf-8-sig') as f:
+        for row in csv.DictReader(f):
+            row['comentarios'] = comment_counts.get(row.get('id', ''), 0)
+            posts.append(row)
+
+    return jsonify(list(reversed(posts)))
+
+@app.route('/api/forum', methods=['POST'])
+def create_forum_post():
+    data = request.json
+    username = data.get('username', '').strip()
+    titulo = data.get('titulo', '').strip()
+    contenido = data.get('contenido', '').strip()
+
+    if not username or not titulo or not contenido:
+        return jsonify({"status": "error", "message": "Todos los campos son requeridos."}), 400
+
+    post_id = str(uuid.uuid4())[:8]
+    fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    file_exists = os.path.isfile(FORUM_POSTS_FILE)
+    with open(FORUM_POSTS_FILE, mode='a', newline='', encoding='utf-8-sig') as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(['id', 'username', 'titulo', 'contenido', 'fecha'])
+        writer.writerow([post_id, username, titulo, contenido, fecha])
+
+    return jsonify({"status": "success", "id": post_id})
+
+@app.route('/api/forum/<post_id>/comments', methods=['GET'])
+def get_comments(post_id):
+    if not os.path.isfile(FORUM_COMMENTS_FILE):
+        return jsonify([])
+
+    comments = []
+    with open(FORUM_COMMENTS_FILE, mode='r', encoding='utf-8-sig') as f:
+        for row in csv.DictReader(f):
+            if row.get('post_id') == post_id:
+                comments.append(row)
+
+    return jsonify(comments)
+
+@app.route('/api/forum/<post_id>/comments', methods=['POST'])
+def add_comment(post_id):
+    data = request.json
+    username = data.get('username', '').strip()
+    comentario = data.get('comentario', '').strip()
+
+    if not username or not comentario:
+        return jsonify({"status": "error", "message": "Todos los campos son requeridos."}), 400
+
+    comment_id = str(uuid.uuid4())[:8]
+    fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    file_exists = os.path.isfile(FORUM_COMMENTS_FILE)
+    with open(FORUM_COMMENTS_FILE, mode='a', newline='', encoding='utf-8-sig') as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(['id', 'post_id', 'username', 'comentario', 'fecha'])
+        writer.writerow([comment_id, post_id, username, comentario, fecha])
+
+    return jsonify({"status": "success", "id": comment_id})
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000, threaded=True)

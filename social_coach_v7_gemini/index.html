@@ -25,6 +25,10 @@
       <i class="fas fa-tachometer-alt nav-icon"></i>
       <span>Mi Progreso</span>
     </a>
+    <a href="#" class="nav-item" data-target="view-forum" onclick="showView('view-forum'); loadForum()">
+      <i class="fas fa-comments nav-icon"></i>
+      <span>Foro</span>
+    </a>
     <a href="#" class="nav-item" data-target="view-settings" onclick="showView('view-settings')">
       <i class="fas fa-cog nav-icon"></i>
       <span>Ajustes (API Key)</span>
@@ -552,6 +556,51 @@
                 </tbody>
               </table>
             </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VISTA: FORO COMUNITARIO                     -->
+        <!-- ========================================== -->
+        <section id="view-forum" class="view">
+          <div class="desktop-centered-card" style="max-width: 800px;">
+
+            <!-- Encabezado -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+              <h1 class="view-title" style="margin: 0;"><i class="fas fa-comments"></i> Foro Comunitario</h1>
+              <div style="display: flex; gap: 12px; align-items: center;">
+                <button class="btn btn-primary" onclick="toggleForumForm()">
+                  <i class="fas fa-plus"></i> Nuevo Post
+                </button>
+                <div style="text-align: center;">
+                  <button id="menu-forum-record-btn" class="btn hoverable" style="background: var(--primary); color: white; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);" onmousedown="startMenuRecording('forum')" onmouseup="stopMenuRecording()" ontouchstart="startMenuRecording('forum')" ontouchend="stopMenuRecording()" title="Comandos: nuevo post, actualizar, volver">
+                    <i class="fas fa-microphone"></i>
+                  </button>
+                  <div id="menu-forum-indicator" style="display: none; color: var(--primary); font-size: 12px; font-weight: bold; margin-top: 8px;">
+                    <i class="fas fa-circle" style="animation: pulse 1s infinite;"></i> Escuchando...
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Formulario nuevo post (oculto por defecto) -->
+            <div id="forum-form" class="forum-form card" style="display: none; margin-bottom: 24px;">
+              <h3 style="margin: 0 0 16px 0; font-size: 16px;">Crear nuevo post</h3>
+              <input id="forum-titulo" type="text" placeholder="Título del post..."
+                style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color); font-size: 14px; margin-bottom: 12px; box-sizing: border-box; background: var(--bg-color); color: var(--text-main);">
+              <textarea id="forum-contenido" placeholder="Escribe tu mensaje aquí..."
+                style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color); font-size: 14px; resize: vertical; min-height: 100px; box-sizing: border-box; background: var(--bg-color); color: var(--text-main); font-family: inherit;"></textarea>
+              <div style="display: flex; gap: 10px; margin-top: 12px;">
+                <button class="btn btn-primary" onclick="submitPost()">Publicar</button>
+                <button class="btn" style="background: var(--bg-color); border: 1px solid var(--border-color);" onclick="toggleForumForm()">Cancelar</button>
+              </div>
+            </div>
+
+            <!-- Lista de posts -->
+            <div id="forum-list">
+              <p style="color: var(--text-muted); text-align: center;">Cargando posts...</p>
+            </div>
+
           </div>
         </section>
 
