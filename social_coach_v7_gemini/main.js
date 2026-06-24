@@ -317,26 +317,31 @@
   // 0. Helper para reproducir voz del NPC filtrando texto de rol
   function playNPCVoice(text) {
       if (!voiceModeEnabled) return;
-      
-      // Eliminar las acciones de rol entre asteriscos para no leerlas (ej: *suspiro*, *mirando mal*, etc)
+
+      if (currentTTSAbortController) currentTTSAbortController.abort();
+      if (currentNPCAudio) { currentNPCAudio.pause(); currentNPCAudio = null; }
+
       const cleanText = text.replace(/\*([^\*]+)\*/g, '').trim();
-      
-      // Si todo el texto eran acciones y quedó vacío, no hace nada
       if (!cleanText) return;
-      
+
+      currentTTSAbortController = new AbortController();
+
       fetch('/api/tts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: cleanText })
+          body: JSON.stringify({ text: cleanText }),
+          signal: currentTTSAbortController.signal
       })
       .then(res => res.json())
       .then(ttsData => {
           if(ttsData.audio_url) {
-              const audio = new Audio(ttsData.audio_url + '?t=' + new Date().getTime());
-              audio.play();
+              currentNPCAudio = new Audio(ttsData.audio_url + '?t=' + new Date().getTime());
+              currentNPCAudio.play();
           }
       })
-      .catch(err => console.error("Error TTS:", err));
+      .catch(err => {
+          if (err.name !== 'AbortError') console.error("Error TTS:", err);
+      });
   }
 
   // 1. Iniciar grabación al presionar el micrófono
@@ -383,6 +388,8 @@
   // =========================================================================
   
   let menuAudioContext = null;
+  let currentNPCAudio = null;
+  let currentTTSAbortController = null;
   let menuCurrentMode = null;
 
   async function startMenuRecording(mode) {
@@ -829,6 +836,8 @@
   // CONTROL DE VISTAS
   // =========================================================================
   function showView(targetId) {
+    if (menuAudioContext) { menuAudioContext.pause(); menuAudioContext = null; }
+    if (currentNPCAudio) { currentNPCAudio.pause(); currentNPCAudio = null; }
     document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
     document.getElementById(targetId).classList.add('active');
 
