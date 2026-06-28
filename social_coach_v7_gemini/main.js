@@ -1,4 +1,4 @@
-﻿// =========================================================================
+// =========================================================================
   // LOGICA PRINCIPAL DE LA APLICACIí“N Y CONEXIí“N CON EL LLM
   // =========================================================================
 
@@ -9,7 +9,8 @@
   
   // Instanciar el cliente LLM global
   const llmClient = new LLMClient('');
-
+  let lastCoachFeedback = ""; // Almacena el feedback texto-plano para TTS
+  
   function updateGlobalScore() { fetch('/get_progress').then(res => res.json()).then(data => { let scoreLabel = document.getElementById('global-score'); if (!scoreLabel) return; if (!data || data.length === 0) { scoreLabel.innerText = '50 Pts'; return; } let total = 0; data.forEach(row => { total += parseInt(row.Stress) || 50; }); let avg = Math.round(total / data.length); scoreLabel.innerText = avg + ' Pts'; }).catch(e=>console.log(e)); }
 
   // Al cargar la página, verificar sesión y recuperar la API key si existe
@@ -583,6 +584,18 @@
                   } else {
                       replyToSpeak = "¿Te sientes preparado para volver a la simulación? Di sí para continuar, o salir para volver al inicio.";
                   }
+              } else if (mode === 'results') {
+                  if (normText.includes("dime el feedback") || normText.includes("leer feedback") || normText.includes("leer el feedback") || normText.includes("feedback")) {
+                      if (lastCoachFeedback) {
+                          replyToSpeak = "Aquí tienes el feedback del coach: " + lastCoachFeedback;
+                      } else {
+                          replyToSpeak = "El feedback aún se está generando, o no hubo conversación suficiente.";
+                      }
+                  } else if (isListAction || isRepeatAction) {
+                      replyToSpeak = "Estás en Resultados. Puedes decir: dime el feedback, o volver.";
+                  } else {
+                      replyToSpeak = "Comandos disponibles: dime el feedback, o volver.";
+                  }
               } else if (mode === 'settings') {
                   if (normText.includes("noche") || normText.includes("nocturno") || normText.includes("oscuro") || normText.includes("claro")) {
                       replyToSpeak = "Cambiando tema visual.";
@@ -769,6 +782,8 @@
       } else if (view === 'view-forum') {
           forumVoiceStep = null;
           playNPCVoice("Foro comunitario. Mantén presionado el micrófono y di nuevo post para crear una publicación, actualizar para recargar, o volver para salir.");
+      } else if (view === 'view-results') {
+          playNPCVoice("Resultados de la simulación. Puedes decir dime el feedback para escuchar las sugerencias del coach, o volver para salir.");
       }
   }
 
@@ -930,6 +945,47 @@
 
       currentCharacter = null; 
       showView('view-results'); 
+      generateCoachFeedback();
+  }
+
+  async function generateCoachFeedback() {
+      const feedbackContainer = document.getElementById('coach-feedback-content');
+      const btnRead = document.getElementById('btn-read-feedback');
+      
+      feedbackContainer.innerHTML = `
+          <div style="text-align: center; color: #92400e;">
+              <i class="fas fa-circle-notch fa-spin" style="font-size: 24px; margin-bottom: 8px;"></i>
+              <p>Analizando la conversación para darte feedback...</p>
+          </div>
+      `;
+      btnRead.style.display = 'none';
+      lastCoachFeedback = "";
+
+      if (llmClient.conversationHistory.length === 0) {
+          feedbackContainer.innerHTML = "<p>No hubo interacción suficiente para generar feedback.</p>";
+          return;
+      }
+
+      try {
+          const coachClient = new LLMClient(llmClient.apiKey);
+          const formattedHistory = llmClient.conversationHistory.map(h => `${h.role === 'user' ? 'Usuario' : 'Personaje'}: ${h.parts[0].text}`).join("\\n");
+          const coachPrompt = "Eres un coach experto en habilidades sociales. Analiza la siguiente conversación y proporciona 2 sugerencias breves, amables y constructivas sobre cómo el usuario podría mejorar su comunicación, empatía o asertividad. Formatea tu respuesta en HTML usando <ul> y <li>.";
+          const message = `Conversación:\\n${formattedHistory}`;
+          
+          let feedback = await coachClient.chat(message, coachPrompt, 0.7);
+          
+          // Limpiar tags de emoción por si el modelo los devuelve
+          feedback = feedback.replace(/\\[USER_EMOTION:.*?\\]/gi, '').trim();
+          
+          lastCoachFeedback = feedback.replace(/<[^>]+>/g, ''); // Limpiar tags HTML para TTS
+          feedbackContainer.innerHTML = feedback;
+          
+          if (voiceModeEnabled) {
+              btnRead.style.display = 'block';
+          }
+      } catch (err) {
+          feedbackContainer.innerHTML = `<p style="color: red;">Error al generar feedback: ${err.message}</p>`;
+      }
   }
 
   // =========================================================================

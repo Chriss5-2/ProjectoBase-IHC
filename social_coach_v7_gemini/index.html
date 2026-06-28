@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -410,7 +410,17 @@
         <!-- ========================================== -->
         <section id="view-results" class="view">
             <div class="desktop-centered-card" style="max-width: 600px; text-align: center;">
-                <h1 style="font-size: 32px; color: var(--primary); margin-bottom: 24px;"><i class="fas fa-clipboard-check"></i> Resultados de la Simulación</h1>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h1 style="font-size: 32px; color: var(--primary); margin: 0;"><i class="fas fa-clipboard-check"></i> Resultados</h1>
+                    <div style="text-align: center;">
+                        <button id="menu-results-record-btn" class="btn hoverable" style="background: var(--primary); color: white; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);" onmousedown="startMenuRecording('results')" onmouseup="stopMenuRecording()" ontouchstart="startMenuRecording('results')" ontouchend="stopMenuRecording()" title="Comandos: volver, dime el feedback">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                        <div id="menu-results-indicator" style="display: none; color: var(--primary); font-size: 12px; font-weight: bold; margin-top: 8px;">
+                            <i class="fas fa-circle" style="animation: pulse 1s infinite;"></i> Escuchando...
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="card" style="margin-bottom: 24px; background-color: #f8fafc; border: 2px solid #cbd5e1;">
                     <h3 style="margin-bottom: 16px; color: #333;">Puntuación de Estrés Final</h3>
@@ -433,6 +443,19 @@
                             <div class="neck"></div>
                         </div>
                     </div>
+                </div>
+
+                <div class="card" style="margin-bottom: 24px; background-color: #fffbeb; border: 2px solid #fcd34d; text-align: left;">
+                    <h3 style="margin-bottom: 16px; color: #b45309;"><i class="fas fa-chalkboard-teacher"></i> Feedback del Coach</h3>
+                    <div id="coach-feedback-content" style="font-size: 15px; color: #451a03; line-height: 1.5;">
+                        <div style="text-align: center; color: #92400e;">
+                            <i class="fas fa-circle-notch fa-spin" style="font-size: 24px; margin-bottom: 8px;"></i>
+                            <p>Analizando la conversación para darte feedback...</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 16px; display: none;" id="btn-read-feedback" onclick="playNPCVoice(lastCoachFeedback)">
+                        <i class="fas fa-volume-up"></i> Escuchar Feedback
+                    </button>
                 </div>
 
                 <button class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 18px;" onclick="showView('view-home')">Volver al Inicio</button>
