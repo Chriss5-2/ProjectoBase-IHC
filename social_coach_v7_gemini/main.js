@@ -908,7 +908,7 @@
       }
   }
 
-  function showSimulationResults() {
+  async function showSimulationResults() {
       // Detener cámara si estaba prendida
       stopCamera();
       
@@ -926,10 +926,17 @@
       const finalDogEmotion = document.getElementById('dog').getAttribute('data-emotion');
       document.getElementById('result-dog').setAttribute('data-emotion', finalDogEmotion);
       
-      // Guardar progreso en el backend
-      const lastChatEmotion = currentCharacter ? currentCharacter.emotion : 'neutral'; // Aproximación
+      // Guardar nombres antes de borrar la referencia
+      const situacionName = currentSituation ? currentSituation.titulo : "Situación Desconocida";
+      const personajeName = currentCharacter ? currentCharacter.nombre : "Personaje Desconocido";
+      const lastChatEmotion = currentCharacter ? currentCharacter.emotion : 'neutral';
       const finalCameraEmotion = document.getElementById('sim-cam-emotion') ? document.getElementById('sim-cam-emotion').innerText : 'neutral';
       
+      // Mostrar la vista y generar feedback
+      showView('view-results'); 
+      await generateCoachFeedback();
+      
+      // Guardar progreso en el backend con el feedback incluido
       fetch('/save_progress', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -937,15 +944,16 @@
               chat_emotion: lastChatEmotion,
               camera_emotion: finalCameraEmotion,
               pet_emotion: finalDogEmotion,
-              stress: currentStress
+              stress: currentStress,
+              situacion: situacionName,
+              personaje: personajeName,
+              feedback: lastCoachFeedback
           })
       }).then(() => {
-          updateGlobalScore(); // <--- Actualizar el promedio si se guarda una nueva simulación
+          updateGlobalScore(); // Actualizar el promedio
       }).catch(err => console.error("Error al guardar progreso:", err));
 
       currentCharacter = null; 
-      showView('view-results'); 
-      generateCoachFeedback();
   }
 
   async function generateCoachFeedback() {
@@ -1136,33 +1144,97 @@
   }
 
   function loadProgress() {
-      const tbody = document.getElementById('progress-table-body');
-      tbody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center;">Cargando...</td></tr>';
+      const container = document.getElementById('progress-container');
+      container.innerHTML = '<div style="padding: 20px; text-align: center;">Cargando historial...</div>';
       
       fetch('/get_progress')
         .then(res => res.json())
         .then(data => {
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center;">Aún no hay historial de progreso. ¡Empieza una simulación!</td></tr>';
+                container.innerHTML = '<div style="padding: 20px; text-align: center;">Aún no hay historial de progreso. ¡Empieza una simulación!</div>';
                 return;
             }
-            tbody.innerHTML = '';
+            
+            // Agrupar por situación
+            const grouped = {};
             data.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.style.borderBottom = "1px solid var(--border-color)";
-                tr.innerHTML = `
-                    <td style="padding: 12px;">${row.Fecha_Hora}</td>
-                    <td style="padding: 12px; text-transform: capitalize;">${row.Emocion_Chat}</td>
-                    <td style="padding: 12px; text-transform: capitalize;">${row.Emocion_Camara}</td>
-                    <td style="padding: 12px; text-transform: capitalize;">${row.Emocion_Mascota}</td>
-                    <td style="padding: 12px;"><strong>${row.Stress}/100</strong></td>
-                `;
-                tbody.appendChild(tr);
+                const sit = row.Situacion || "Situación Desconocida";
+                if (!grouped[sit]) grouped[sit] = [];
+                grouped[sit].push(row);
             });
+            
+            container.innerHTML = '';
+            
+            for (const sit in grouped) {
+                const records = grouped[sit];
+                let totalStress = 0;
+                records.forEach(r => { totalStress += parseInt(r.Stress) || 50; });
+                const avgStress = Math.round(totalStress / records.length);
+                const performance = 100 - avgStress;
+                
+                let perfIcon = "fa-smile-beam";
+                let perfColor = "#16a34a"; // Green
+                if (performance < 40) { perfIcon = "fa-frown"; perfColor = "#dc2626"; } // Red
+                else if (performance < 70) { perfIcon = "fa-meh"; perfColor = "#d97706"; } // Yellow
+                
+                // Generar HTML del acordeón
+                const accId = 'acc-' + Math.random().toString(36).substr(2, 9);
+                
+                let recordsHtml = '';
+                // Mostrar del más reciente al más antiguo
+                records.slice().reverse().forEach(row => {
+                    const personaje = row.Personaje || "Desconocido";
+                    let feedbackHtml = '';
+                    if (row.Feedback && row.Feedback.trim() !== '') {
+                        feedbackHtml = `
+                            <div style="margin-top: 12px; padding: 12px; background: #fffbeb; border-left: 3px solid #fcd34d; font-size: 14px; border-radius: 0 6px 6px 0;">
+                                <strong><i class="fas fa-chalkboard-teacher"></i> Feedback recibido:</strong>
+                                <div style="margin-top: 8px;">${row.Feedback}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    recordsHtml += `
+                        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; background: white;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 10px;">
+                                <div style="font-weight: bold; color: var(--primary);"><i class="fas fa-user-circle"></i> ${personaje}</div>
+                                <div style="font-size: 12px; color: #64748b;"><i class="fas fa-calendar-alt"></i> ${row.Fecha_Hora}</div>
+                            </div>
+                            <div style="display: flex; gap: 15px; font-size: 13px; color: #475569; flex-wrap: wrap;">
+                                <span><strong>Estrés:</strong> ${row.Stress}/100</span>
+                                <span><strong>Cámara:</strong> ${row.Emocion_Camara}</span>
+                                <span><strong>Chat:</strong> ${row.Emocion_Chat}</span>
+                                <span><strong>Mascota:</strong> ${row.Emocion_Mascota}</span>
+                            </div>
+                            ${feedbackHtml}
+                        </div>
+                    `;
+                });
+                
+                const section = document.createElement('div');
+                section.style.marginBottom = "16px";
+                section.innerHTML = `
+                    <div onclick="const el = document.getElementById('${accId}'); el.style.display = el.style.display === 'none' ? 'block' : 'none'" 
+                         style="background: var(--bg-card); padding: 16px 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid ${perfColor}; transition: transform 0.2s;">
+                        <div>
+                            <h3 style="margin: 0; font-size: 18px; color: var(--text-color);">${sit}</h3>
+                            <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">${records.length} interacción(es) registrada(s)</p>
+                        </div>
+                        <div style="text-align: right; color: ${perfColor};">
+                            <div style="font-size: 22px; font-weight: bold;"><i class="fas ${perfIcon}"></i> ${performance}%</div>
+                            <div style="font-size: 11px; text-transform: uppercase;">Rendimiento</div>
+                        </div>
+                    </div>
+                    <div id="${accId}" style="display: none; padding: 16px 0 0 16px; border-left: 2px dashed #cbd5e1; margin-left: 10px;">
+                        ${recordsHtml}
+                    </div>
+                `;
+                container.appendChild(section);
+            }
         })
         .catch(err => {
             console.error(err);
-            tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: red;">Error al cargar progreso.</td></tr>`;
+            container.innerHTML = `<div style="padding: 20px; text-align: center; color: red;">Error al cargar progreso.</div>`;
         });
   }
 
