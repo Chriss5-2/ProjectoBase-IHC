@@ -232,7 +232,7 @@ def save_progress():
     if file_exists:
         with open(PROGRESS_FILE, mode='r', encoding='utf-8-sig') as f:
             first_line = f.readline().strip()
-            if 'Situacion' not in first_line:
+            if 'Username' not in first_line:
                 needs_header = True
                 
     if needs_header:
@@ -244,22 +244,24 @@ def save_progress():
                 
         with open(PROGRESS_FILE, mode='w', newline='', encoding='utf-8-sig') as f:
             writer = csv.writer(f)
-            writer.writerow(['Fecha_Hora', 'Emocion_Chat', 'Emocion_Camara', 'Emocion_Mascota', 'Stress', 'Situacion', 'Personaje', 'Feedback'])
+            writer.writerow(['Username', 'Fecha_Hora', 'Emocion_Chat', 'Emocion_Camara', 'Emocion_Mascota', 'Stress', 'Situacion', 'Personaje', 'Feedback'])
             for row in old_data:
                 writer.writerow([
+                    row.get('Username', 'edy'),
                     row.get('Fecha_Hora', ''),
                     row.get('Emocion_Chat', 'neutral'),
                     row.get('Emocion_Camara', 'neutral'),
                     row.get('Emocion_Mascota', 'neutral'),
                     row.get('Stress', '50'),
-                    'Situación Desconocida',
-                    'Personaje Desconocido',
-                    ''
+                    row.get('Situacion', 'Situación Desconocida'),
+                    row.get('Personaje', 'Personaje Desconocido'),
+                    row.get('Feedback', '')
                 ])
                 
     with open(PROGRESS_FILE, mode='a', newline='', encoding='utf-8-sig') as f:
         writer = csv.writer(f)
         writer.writerow([
+            data.get('username', 'Desconocido'),
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             data.get('chat_emotion', 'neutral'),
             data.get('camera_emotion', 'neutral'),
@@ -273,13 +275,15 @@ def save_progress():
 
 @app.route('/get_progress')
 def get_progress():
+    username = request.args.get('username')
     if not os.path.isfile(PROGRESS_FILE):
         return jsonify([])
     results = []
     with open(PROGRESS_FILE, mode='r', encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
         for row in reader:
-            results.append(row)
+            if not username or row.get('Username') == username:
+                results.append(row)
     return jsonify(results)
 
 # Rutas para TTS y STT usando gTTS y SpeechRecognition

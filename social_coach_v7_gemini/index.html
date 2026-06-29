@@ -58,26 +58,80 @@
         <!-- ========================================== -->
         <!-- VISTA 0: LOGIN                             -->
         <!-- ========================================== -->
-        <section id="view-login" class="view active">
-          <div class="desktop-centered-card" style="max-width: 500px; text-align: center;">
-            <div style="margin-bottom: 32px;">
-              <h1 style="color: var(--primary); font-size: 36px; margin-bottom: 8px;">Social Coach</h1>
-              <p style="color: var(--text-muted); font-size: 16px;">Iniciar Sesión</p>
-            </div>
+        <!-- ========================================== -->
+        <!-- VISTA: BIENVENIDA (SPLASH SCREEN)          -->
+        <!-- ========================================== -->
+        <section id="view-welcome" class="view active">
+          <div style="display: flex; justify-content: center; align-items: center; min-height: calc(100vh - 100px); background: linear-gradient(135deg, #f0fdf4 0%, #dbeafe 100%); border-radius: 16px; padding: 20px;">
+            <div style="text-align: center; max-width: 600px; background: rgba(255, 255, 255, 0.8); padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); backdrop-filter: blur(10px);">
+            <i class="fas fa-robot" style="font-size: 60px; color: var(--primary); margin-bottom: 20px; animation: pulse 2s infinite;"></i>
+            <h1 style="color: var(--primary); font-size: 42px; margin-bottom: 16px;">Social Coach</h1>
+            <p style="font-size: 18px; color: #475569; margin-bottom: 32px; line-height: 1.6;">
+              Bienvenido a tu espacio seguro para entrenar habilidades sociales. Prepara tus auriculares y micrófono para la mejor experiencia.
+            </p>
+            <button class="btn btn-primary hoverable" style="font-size: 20px; padding: 16px 40px; border-radius: 30px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);" onclick="startAppAndNarrate()">
+              <i class="fas fa-play-circle"></i> Comenzar
+            </button>
+          </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VISTA 0: LOGIN & PRESENTACIÓN              -->
+        <!-- ========================================== -->
+        <section id="view-login" class="view">
+          <div style="display: flex; flex-wrap: wrap; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); min-height: 600px;">
             
-            <div id="login-error-msg" style="display: none; background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;"></div>
-            
-            <div style="text-align: left; margin-bottom: 16px;">
-              <label style="font-size: 14px; font-weight: bold; color: var(--text-color); display: block; margin-bottom: 8px;">Usuario</label>
-              <input type="text" id="login-username" placeholder="Tu usuario" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px;">
+            <!-- Lado Izquierdo: Presentación -->
+            <div style="flex: 1 1 350px; background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%); padding: 40px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+              <h2 style="color: var(--primary); font-size: 28px; margin-bottom: 30px;">Descubre tu Potencial</h2>
+              
+              <div style="margin-bottom: 24px;">
+                <div style="width: 70px; height: 70px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 30px; color: #3b82f6; margin: 0 auto 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                  <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3 style="font-size: 16px; color: #1e293b; margin-bottom: 4px;">Entorno Seguro</h3>
+                <p style="font-size: 13px; color: #64748b;">Practica sin presiones ni juicios.</p>
+              </div>
+              
+              <div style="margin-bottom: 24px;">
+                <div style="width: 70px; height: 70px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 30px; color: #ec4899; margin: 0 auto 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                  <i class="fas fa-heartbeat"></i>
+                </div>
+                <h3 style="font-size: 16px; color: #1e293b; margin-bottom: 4px;">Manejo del Estrés</h3>
+                <p style="font-size: 13px; color: #64748b;">Mide tus emociones en tiempo real.</p>
+              </div>
+              
+              <div>
+                <div style="width: 70px; height: 70px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 30px; color: #8b5cf6; margin: 0 auto 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                  <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <h3 style="font-size: 16px; color: #1e293b; margin-bottom: 4px;">Feedback Inteligente</h3>
+                <p style="font-size: 13px; color: #64748b;">Recibe consejos personalizados de IA.</p>
+              </div>
             </div>
-            <div style="text-align: left; margin-bottom: 24px;">
-              <label style="font-size: 14px; font-weight: bold; color: var(--text-color); display: block; margin-bottom: 8px;">Contraseña</label>
-              <input type="password" id="login-password" placeholder="Tu contraseña" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px;" onkeypress="if(event.key === 'Enter') handleLogin()">
+
+            <!-- Lado Derecho: Formulario -->
+            <div style="flex: 1 1 350px; padding: 40px; display: flex; flex-direction: column; justify-content: center; background: white;">
+              <div style="text-align: center; margin-bottom: 32px;">
+                <h1 style="color: var(--primary); font-size: 32px; margin-bottom: 8px;">Social Coach</h1>
+                <p style="color: var(--text-muted); font-size: 16px;">Iniciar Sesión</p>
+              </div>
+              
+              <div id="login-error-msg" style="display: none; background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;"></div>
+              
+              <div style="text-align: left; margin-bottom: 16px;">
+                <label style="font-size: 14px; font-weight: bold; color: var(--text-color); display: block; margin-bottom: 8px;">Usuario</label>
+                <input type="text" id="login-username" placeholder="Tu usuario" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px;">
+              </div>
+              <div style="text-align: left; margin-bottom: 24px;">
+                <label style="font-size: 14px; font-weight: bold; color: var(--text-color); display: block; margin-bottom: 8px;">Contraseña</label>
+                <input type="password" id="login-password" placeholder="Tu contraseña" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px;" onkeypress="if(event.key === 'Enter') handleLogin()">
+              </div>
+              
+              <button class="btn btn-primary hoverable" style="width: 100%; padding: 16px; font-size: 18px; margin-bottom: 16px;" onclick="handleLogin()">Ingresar</button>
+              <p style="font-size: 14px; color: var(--text-muted); text-align: center;">¿No tienes cuenta? <a href="#" style="color: var(--primary); font-weight: bold; text-decoration: none;" onclick="showAuthView('view-register')">Regístrate aquí</a></p>
             </div>
-            
-            <button class="btn btn-primary hoverable" style="width: 100%; padding: 16px; font-size: 18px; margin-bottom: 16px;" onclick="handleLogin()">Ingresar</button>
-            <p style="font-size: 14px; color: var(--text-muted);">¿No tienes cuenta? <a href="#" style="color: var(--primary); font-weight: bold; text-decoration: none;" onclick="showAuthView('view-register')">Regístrate aquí</a></p>
           </div>
         </section>
 
@@ -85,26 +139,37 @@
         <!-- VISTA 0.1: REGISTRO                        -->
         <!-- ========================================== -->
         <section id="view-register" class="view">
-          <div class="desktop-centered-card" style="max-width: 500px; text-align: center;">
-            <div style="margin-bottom: 32px;">
-              <h1 style="color: var(--primary); font-size: 36px; margin-bottom: 8px;">Social Coach</h1>
-              <p style="color: var(--text-muted); font-size: 16px;">Crear Cuenta Nueva</p>
-            </div>
+          <div style="display: flex; flex-wrap: wrap; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); min-height: 600px;">
             
-            <div id="register-error-msg" style="display: none; background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;"></div>
-            <div id="register-success-msg" style="display: none; background: #d1fae5; color: #065f46; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;"></div>
-            
-            <div style="text-align: left; margin-bottom: 16px;">
-              <label style="font-size: 14px; font-weight: bold; color: var(--text-color); display: block; margin-bottom: 8px;">Usuario</label>
-              <input type="text" id="register-username" placeholder="Elige un usuario" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px;">
+            <!-- Lado Izquierdo: Presentación -->
+            <div style="flex: 1 1 350px; background: linear-gradient(135deg, #fdf4ff 0%, #f3e8ff 100%); padding: 40px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+              <i class="fas fa-user-plus" style="font-size: 60px; color: #a855f7; margin-bottom: 20px;"></i>
+              <h2 style="color: #9333ea; font-size: 28px; margin-bottom: 16px;">Únete a la Comunidad</h2>
+              <p style="font-size: 15px; color: #6b7280; line-height: 1.6;">Crea tu cuenta gratuita hoy y empieza tu camino hacia una mejor comunicación interpersonal.</p>
             </div>
-            <div style="text-align: left; margin-bottom: 24px;">
-              <label style="font-size: 14px; font-weight: bold; color: var(--text-color); display: block; margin-bottom: 8px;">Contraseña</label>
-              <input type="password" id="register-password" placeholder="Crea una contraseña" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px;" onkeypress="if(event.key === 'Enter') handleRegister()">
+
+            <!-- Lado Derecho: Formulario -->
+            <div style="flex: 1 1 350px; padding: 40px; display: flex; flex-direction: column; justify-content: center; background: white;">
+              <div style="text-align: center; margin-bottom: 32px;">
+                <h1 style="color: var(--primary); font-size: 32px; margin-bottom: 8px;">Social Coach</h1>
+                <p style="color: var(--text-muted); font-size: 16px;">Crear Cuenta Nueva</p>
+              </div>
+              
+              <div id="register-error-msg" style="display: none; background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;"></div>
+              <div id="register-success-msg" style="display: none; background: #d1fae5; color: #065f46; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;"></div>
+              
+              <div style="text-align: left; margin-bottom: 16px;">
+                <label style="font-size: 14px; font-weight: bold; color: var(--text-color); display: block; margin-bottom: 8px;">Usuario</label>
+                <input type="text" id="register-username" placeholder="Elige un usuario" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px;">
+              </div>
+              <div style="text-align: left; margin-bottom: 24px;">
+                <label style="font-size: 14px; font-weight: bold; color: var(--text-color); display: block; margin-bottom: 8px;">Contraseña</label>
+                <input type="password" id="register-password" placeholder="Crea una contraseña" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px;" onkeypress="if(event.key === 'Enter') handleRegister()">
+              </div>
+              
+              <button class="btn btn-primary hoverable" style="width: 100%; padding: 16px; font-size: 18px; margin-bottom: 16px;" onclick="handleRegister()">Registrarse</button>
+              <p style="font-size: 14px; color: var(--text-muted); text-align: center;">¿Ya tienes cuenta? <a href="#" style="color: var(--primary); font-weight: bold; text-decoration: none;" onclick="showAuthView('view-login')">Inicia sesión</a></p>
             </div>
-            
-            <button class="btn btn-primary hoverable" style="width: 100%; padding: 16px; font-size: 18px; margin-bottom: 16px;" onclick="handleRegister()">Registrarse</button>
-            <p style="font-size: 14px; color: var(--text-muted);">¿Ya tienes cuenta? <a href="#" style="color: var(--primary); font-weight: bold; text-decoration: none;" onclick="showAuthView('view-login')">Inicia sesión</a></p>
           </div>
         </section>
 

@@ -1,6 +1,14 @@
-﻿Fecha_Hora,Emocion_Chat,Emocion_Camara,Emocion_Mascota,Stress,Situacion,Personaje,Feedback
-2026-06-28 19:41:17,neutral,neutral,sad,100,Espacio Público,Cajero Estresado,"
+Username,Fecha_Hora,Emocion_Chat,Emocion_Camara,Emocion_Mascota,Stress,Situacion,Personaje,Feedback
+edy,2026-06-28 19:41:17,neutral,neutral,sad,100,Espacio Público,Cajero Estresado,"
 Te sugiero practicar una comunicación más asertiva para establecer límites claros cuando recibas un trato irrespetuoso, evitando disculparte en exceso por situaciones que no están bajo tu control total"
-2026-06-28 20:46:47,angry,neutral,sad,90,Entorno Laboral,Cliente Insatisfecho,"
+edy,2026-06-28 20:46:47,angry,neutral,sad,90,Entorno Laboral,Cliente Insatisfecho,"
 Le sugiero practicar la validación emocional al inicio de la interacción para que la otra persona se sienta escuchada y baje su nivel de agresividad de manera natural.
 "
+edy,2026-06-28 22:53:14,neutral,neutral,neutral,50,Entorno Académico,Estudiante Dominante,"
+En lugar de utilizar calificativos ofensivos, podrías expresar tu desacuerdo de manera firme pero profesional para mantener el respeto mutuo en el entorno laboral. Es mucho más efectivo manifestar que te sientes excluido del proceso creativo y que exiges que se valore tu contribución al proyecto con seriedad.
+Te sugiero proponer una pausa para presentar tu idea con argumentos técnicos sólidos antes de reaccionar a la actitud provocadora de tu interlocutor. Mantener la compostura ante la arrogancia ajena te otorga una mayor autoridad profesional y facilita que el conflicto se resuelva de forma productiva.
+
+
+[USER_EMOTION:angry]"
+diego,2026-06-28 23:01:27,neutral,neutral,neutral,50,Entorno Académico,Estudiante Dominante,"
+Es preferible que evites el uso de términos absolutos como siempre o nunca al describir el comportamiento de los demás, ya que esto tiende a escalar el conflicto en lugar de resolverlo"

@@ -13,7 +13,7 @@
   let lastChatEmotionDetected = 'neutral';
   let lastCamEmotionDetected = 'neutral';
   
-  function updateGlobalScore() { fetch('/get_progress').then(res => res.json()).then(data => { let scoreLabel = document.getElementById('global-score'); if (!scoreLabel) return; if (!data || data.length === 0) { scoreLabel.innerText = '50 Pts'; return; } let total = 0; data.forEach(row => { total += parseInt(row.Stress) || 50; }); let avg = Math.round(total / data.length); scoreLabel.innerText = avg + ' Pts'; }).catch(e=>console.log(e)); }
+  function updateGlobalScore() { fetch('/get_progress?username=' + encodeURIComponent(currentUser)).then(res => res.json()).then(data => { let scoreLabel = document.getElementById('global-score'); if (!scoreLabel) return; if (!data || data.length === 0) { scoreLabel.innerText = '50 Pts'; return; } let total = 0; data.forEach(row => { total += parseInt(row.Stress) || 50; }); let avg = Math.round(total / data.length); scoreLabel.innerText = avg + ' Pts'; }).catch(e=>console.log(e)); }
 
   // Al cargar la página, verificar sesión y recuperar la API key si existe
   document.addEventListener("DOMContentLoaded", () => {
@@ -23,7 +23,7 @@
           // No hay usuario, mostrar login
           document.getElementById('sidebar-nav').style.display = 'none';
           document.getElementById('main-header').style.display = 'none';
-          showAuthView('view-login');
+          showAuthView('view-welcome');
           return;
       }
       
@@ -47,6 +47,16 @@
       updateGlobalScore(); // <--- Llamar al promedio del puntaje global al iniciar
       showView('view-home');
   });
+
+  // Función para iniciar la presentación y narración desde la pantalla de bienvenida
+  function startAppAndNarrate() {
+      // Transición manual a la vista de login dividida para no cortar el audio
+      document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+      document.getElementById('view-login').classList.add('active');
+      
+      // Reproducir voz
+      playNPCVoice("Bienvenido a Social Coach. Tu espacio seguro para entrenar habilidades sociales, manejar el estrés y recibir feedback personalizado. Ingresa tus datos para iniciar sesión.");
+  }
 
   // Guardar API Key desde Ajustes
   function saveApiKey() {
@@ -772,23 +782,30 @@
   function announceMenuContext(view) {
       if (!voiceModeEnabled) return;
       if(view === 'view-home') {
-          playNPCVoice("Elige una situación para practicar. Cada entorno presenta diferentes retos emocionales y sociales.");
+          let sNames = "";
+          if (typeof appData !== 'undefined' && appData.situaciones) {
+              sNames = " Tienes disponibles: " + appData.situaciones.map(s => s.titulo).join(", ") + ".";
+          }
+          playNPCVoice("Has entrado al Entorno de Simulación. Elige una situación para practicar." + sNames + " Puedes usar comandos de voz para entrar a la situación que desees.");
       } else if(view === 'view-characters' && currentSituation) {
-          playNPCVoice("Selecciona con qué personaje interactuar en " + currentSituation.titulo);
+          let cNames = currentSituation.personajes.map(p => p.nombre).join(", ");
+          playNPCVoice("Selecciona con qué personaje interactuar en " + currentSituation.titulo + ". Opciones: " + cNames + ". Puedes decir el nombre del personaje para seleccionarlo.");
       } else if(view === 'view-prep' && currentCharacter) {
           const contextoContextual = currentCharacter.prompt.split("REGLAS")[0].trim();
           playNPCVoice("Contexto: " + contextoContextual + " ... El objetivo es: " + document.getElementById('prep-objective').innerText + " ... ¿Estás listo para iniciar la simulación? Di sí para comenzar, o volver para elegir otro personaje.");
       } else if (view === 'view-pause') {
           playNPCVoice("Modo de pausa activa. Respira conmigo. ¿Te sientes preparado para volver? Di sí para continuar, o salir para abandonar.");
       } else if (view === 'view-settings') {
-          playNPCVoice("Panel de Configuración. Comandos de voz: modo noche, tamaño grande, normal o pequeño.");
+          playNPCVoice("Panel de Configuración. Comandos de voz disponibles: modo noche, tamaño grande, normal o pequeño.");
       } else if (view === 'view-meter') {
-          playNPCVoice("Historial de progreso. Puedes decir leer promedio.");
+          const scoreEl = document.getElementById('global-score');
+          const score = scoreEl ? scoreEl.innerText : "desconocido";
+          playNPCVoice("Historial de progreso. Tu rendimiento general actual es " + score + ". Elige una categoría de tu historial para revisar los detalles de tus simulaciones.");
       } else if (view === 'view-forum') {
           forumVoiceStep = null;
           playNPCVoice("Foro comunitario. Mantén presionado el micrófono y di nuevo post para crear una publicación, actualizar para recargar, o volver para salir.");
       } else if (view === 'view-results') {
-          playNPCVoice("Resultados de la simulación. Puedes decir dime el feedback para escuchar las sugerencias del coach, o volver para salir.");
+          playNPCVoice("Resultados de la simulación. Puedes decir 'dime el feedback' para escuchar mis sugerencias, o 'volver' para salir al menú principal.");
       }
   }
 
@@ -947,6 +964,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+              username: currentUser,
               chat_emotion: lastChatEmotion,
               camera_emotion: finalCameraEmotion,
               pet_emotion: finalDogEmotion,
@@ -1154,7 +1172,7 @@
       const container = document.getElementById('progress-container');
       container.innerHTML = '<div style="padding: 20px; text-align: center;">Cargando historial...</div>';
       
-      fetch('/get_progress')
+      fetch('/get_progress?username=' + encodeURIComponent(currentUser))
         .then(res => res.json())
         .then(data => {
             if (!data || data.length === 0) {
