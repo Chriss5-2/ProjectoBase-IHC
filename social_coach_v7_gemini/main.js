@@ -10,6 +10,8 @@
   // Instanciar el cliente LLM global
   const llmClient = new LLMClient('');
   let lastCoachFeedback = ""; // Almacena el feedback texto-plano para TTS
+  let lastChatEmotionDetected = 'neutral';
+  let lastCamEmotionDetected = 'neutral';
   
   function updateGlobalScore() { fetch('/get_progress').then(res => res.json()).then(data => { let scoreLabel = document.getElementById('global-score'); if (!scoreLabel) return; if (!data || data.length === 0) { scoreLabel.innerText = '50 Pts'; return; } let total = 0; data.forEach(row => { total += parseInt(row.Stress) || 50; }); let avg = Math.round(total / data.length); scoreLabel.innerText = avg + ' Pts'; }).catch(e=>console.log(e)); }
 
@@ -150,6 +152,8 @@
       
       // Reset Biometrí­a (Estrés) y UI de la Mascota
       currentStress = 50;
+      lastChatEmotionDetected = 'neutral';
+      lastCamEmotionDetected = 'neutral';
       updateStressUI();
       document.getElementById('dog').setAttribute('data-emotion', 'neutral');
       document.getElementById('dog-statusText').innerText = 'neutral';
@@ -205,6 +209,7 @@
               const detectedEmotion = emotionMatch[1].toLowerCase();
               const validEmotions = ['neutral', 'happy', 'sad', 'angry', 'fear', 'surprise', 'disgust'];
               if(validEmotions.includes(detectedEmotion)) {
+                  lastChatEmotionDetected = detectedEmotion;
                   let pointsChange = 0;
                   let dogEmotion = 'neutral';
                   
@@ -825,6 +830,7 @@
                   const detectedEmotion = emotionMatch[1].toLowerCase();
                   const validEmotions = ['neutral', 'happy', 'sad', 'angry', 'fear', 'surprise', 'disgust'];
                   if(validEmotions.includes(detectedEmotion)) {
+                      lastChatEmotionDetected = detectedEmotion;
                       let pointsChange = 0; let dogEmotion = 'neutral';
                       switch(detectedEmotion) {
                           case 'angry': pointsChange = 20; dogEmotion = 'fear'; break;
@@ -929,8 +935,8 @@
       // Guardar nombres antes de borrar la referencia
       const situacionName = currentSituation ? currentSituation.titulo : "Situación Desconocida";
       const personajeName = currentCharacter ? currentCharacter.nombre : "Personaje Desconocido";
-      const lastChatEmotion = currentCharacter ? currentCharacter.emotion : 'neutral';
-      const finalCameraEmotion = document.getElementById('sim-cam-emotion') ? document.getElementById('sim-cam-emotion').innerText : 'neutral';
+      const lastChatEmotion = lastChatEmotionDetected;
+      const finalCameraEmotion = lastCamEmotionDetected;
       
       // Mostrar la vista y generar feedback
       showView('view-results'); 
@@ -1116,6 +1122,7 @@
           
           const validEmotions = ['neutral', 'happy', 'sad', 'angry', 'fear', 'surprise', 'disgust'];
           if(validEmotions.includes(data.emotion)) {
+              lastCamEmotionDetected = data.emotion;
               setEmotion(data.emotion);
           }
 
