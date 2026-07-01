@@ -1,4 +1,4 @@
-// =========================================================================
+﻿// =========================================================================
   // LOGICA PRINCIPAL DE LA APLICACIí“N Y CONEXIí“N CON EL LLM
   // =========================================================================
 
@@ -1000,14 +1000,14 @@
 
       try {
           const coachClient = new LLMClient(llmClient.apiKey);
-          const formattedHistory = llmClient.conversationHistory.map(h => `${h.role === 'user' ? 'Usuario' : 'Personaje'}: ${h.parts[0].text}`).join("\\n");
+          const formattedHistory = llmClient.conversationHistory.map(h => `${h.role === 'user' ? 'Usuario' : 'Personaje'}: ${h.parts[0].text}`).join("\n");
           const coachPrompt = "Eres un coach experto en habilidades sociales. Analiza la siguiente conversación y proporciona 2 sugerencias breves, amables y constructivas sobre cómo el usuario podría mejorar su comunicación, empatía o asertividad. Formatea tu respuesta en HTML usando <ul> y <li>.";
-          const message = `Conversación:\\n${formattedHistory}`;
+          const message = `Conversación:\n${formattedHistory}`;
           
           let feedback = await coachClient.chat(message, coachPrompt, 0.7);
           
           // Limpiar tags de emoción por si el modelo los devuelve
-          feedback = feedback.replace(/\\[USER_EMOTION:.*?\\]/gi, '').trim();
+          feedback = feedback.replace(/\[USER_EMOTION:.*?\]/gi, '').trim();
           
           lastCoachFeedback = feedback.replace(/<[^>]+>/g, ''); // Limpiar tags HTML para TTS
           feedbackContainer.innerHTML = feedback;

@@ -67,7 +67,7 @@
             <i class="fas fa-robot" style="font-size: 60px; color: var(--primary); margin-bottom: 20px; animation: pulse 2s infinite;"></i>
             <h1 style="color: var(--primary); font-size: 42px; margin-bottom: 16px;">Social Coach</h1>
             <p style="font-size: 18px; color: #475569; margin-bottom: 32px; line-height: 1.6;">
-              Bienvenido a tu espacio seguro para entrenar habilidades sociales. Prepara tus auriculares y micrófono para la mejor experiencia.
+              Practica conversaciones difíciles con personajes de IA, recibe feedback en tiempo real y mide tu nivel de estrés para mejorar tu comunicación.
             </p>
             <button class="btn btn-primary hoverable" style="font-size: 20px; padding: 16px 40px; border-radius: 30px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);" onclick="startAppAndNarrate()">
               <i class="fas fa-play-circle"></i> Comenzar
@@ -192,6 +192,22 @@
                   </div>
                 </div>
               </div>
+              <div class="flow-steps">
+                <div class="flow-step">
+                  <span class="flow-step-num">1</span>
+                  <span class="flow-step-label">Elige tu situación</span>
+                </div>
+                <i class="fas fa-chevron-right flow-step-arrow"></i>
+                <div class="flow-step">
+                  <span class="flow-step-num">2</span>
+                  <span class="flow-step-label">Selecciona un personaje</span>
+                </div>
+                <i class="fas fa-chevron-right flow-step-arrow"></i>
+                <div class="flow-step">
+                  <span class="flow-step-num">3</span>
+                  <span class="flow-step-label">¡Simula y mejora!</span>
+                </div>
+              </div>
               <div id="situations-container" class="grid-2col" style="gap: 24px;"></div>
           </div>
         </section>
@@ -243,8 +259,8 @@
                 </div>
                 
                 <div style="background: white; padding: 24px; border-radius: 12px; margin-bottom: 16px; font-size: 16px; color: #333; line-height: 1.6;">
-                  <i class="fas fa-robot" style="color: var(--primary); font-size: 20px; margin-right: 8px;"></i> 
-                  <strong>Entrenador IA:</strong> "Antes de empezar, recuerda respirar. En este escenario practicaremos tu regulación emocional y comunicación asertiva."
+                  <i class="fas fa-robot" style="color: var(--primary); font-size: 20px; margin-right: 8px;"></i>
+                  <strong>Entrenador IA:</strong> "<span id="prep-coach-tip">Antes de empezar, recuerda respirar. Mantén la calma y sé directo en lo que necesitas.</span>"
                 </div>
 
                 <div class="context-obj-box" style="background: #ff3b30; padding: 24px; border-radius: 12px; font-size: 16px; color: white; line-height: 1.5; font-weight: bold; box-shadow: 0 4px 6px rgba(255, 59, 48, 0.4);">
@@ -274,7 +290,10 @@
         <section id="view-sim" class="view" style="height: calc(180vh - 20px);">
             <div style="max-width: 1000px; margin: 0 auto; height: 100%; display: flex; flex-direction: column;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid #e5e7eb; padding-bottom: 16px; flex-shrink: 0;">
-                  <h2 style="color: var(--primary); font-size: 24px;"><i class="fas fa-video" style="color: #b91c1c;"></i> En Simulación: <span id="sim-title-bar">Activo</span></h2>
+                  <div style="display: flex; align-items: center; gap: 16px;">
+                      <h2 style="color: var(--primary); font-size: 24px;"><i class="fas fa-video" style="color: #b91c1c;"></i> En Simulación: <span id="sim-title-bar">Activo</span></h2>
+                      <span id="message-counter" style="background: #f1f5f9; color: #64748b; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px;">Intercambio 0</span>
+                  </div>
                   <button class="btn-icon" onclick="showView('view-home'); endSimulation(true)" title="Salir de la simulación"><i class="fas fa-times"></i></button>
               </div>
 
@@ -363,7 +382,11 @@
                               <button class="btn btn-perdiste" id="stopBtn" onclick="stopCamera()" style="display: none; font-size: 12px; padding: 8px 12px; background: white;">Detener</button>
                           </div>
                           
-                          <div style="font-size: 13px; text-align: center; margin-bottom: 15px; color: #555;">Emoción: <strong id="statusText">ninguna</strong></div>
+                          <div style="text-align: center; margin-bottom: 15px;">
+                              <span id="cam-emotion-badge" class="cam-emotion-badge cam-emotion-neutral">😐 Neutral</span>
+                              <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Emoción detectada por cámara</div>
+                              <span id="statusText" style="display:none;">neutral</span>
+                          </div>
 
                           <!-- Mini Panda -->
                           <div style="position: relative; width: 150px; height: 150px; margin: 0 auto; perspective: 800px; transform: scale(0.6); transform-origin: top center;">
@@ -627,7 +650,11 @@
               </div>
             </div>
             <p style="color: var(--text-color); margin-bottom: 16px;">Historial de simulaciones y niveles de estrés guardados localmente.</p>
-            
+
+            <div id="progress-insight" style="display:none; margin-bottom: 20px;"></div>
+
+            <div id="filter-tabs" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;"></div>
+
             <div id="progress-container">
               <div style="padding: 20px; text-align: center;">Cargando historial...</div>
             </div>
@@ -680,6 +707,46 @@
         </section>
 
       </main>
+  </div>
+</div>
+
+<!-- Banner de última sesión -->
+<div id="last-session-banner" style="display:none; position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 9000; background: white; border: 1px solid #e2e8f0; border-left: 4px solid var(--primary); border-radius: 10px; padding: 12px 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); align-items: center; gap: 16px; max-width: 600px; width: 90%;">
+  <i class="fas fa-history" style="color: var(--primary); font-size: 18px;"></i>
+  <span id="last-session-text" style="flex: 1; font-size: 14px; color: #334155;"></span>
+  <button onclick="document.getElementById('last-session-banner').style.display='none'" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 18px;">×</button>
+</div>
+
+<!-- Modal de logros -->
+<div id="achievement-modal" style="display:none; position: fixed; inset: 0; z-index: 9500; background: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
+  <div style="background: white; border-radius: 20px; padding: 32px; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center;">
+    <h2 style="color: var(--primary); margin-bottom: 16px;"><i class="fas fa-trophy"></i> ¡Logro desbloqueado!</h2>
+    <div id="achievement-content"></div>
+    <button class="btn btn-primary" style="margin-top: 20px; width: 100%;" onclick="document.getElementById('achievement-modal').style.display='none'">¡Genial!</button>
+  </div>
+</div>
+
+<!-- Tutorial de primera vez -->
+<div id="tutorial-overlay" style="display:none; position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.75); align-items: center; justify-content: center;">
+  <div style="background: white; border-radius: 20px; padding: 36px; max-width: 480px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.4);">
+    <h2 style="color: var(--primary); margin-bottom: 8px; font-size: 24px;"><i class="fas fa-hand-wave"></i> ¡Bienvenido/a a Social Coach!</h2>
+    <p style="color: #64748b; margin-bottom: 24px; font-size: 15px;">Aquí tienes lo esencial para empezar:</p>
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 28px;">
+      <div style="display: flex; gap: 16px; align-items: flex-start;">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">1</div>
+        <div><strong style="color: #1e293b;">Elige una situación</strong><br><span style="font-size: 13px; color: #64748b;">Selecciona el entorno que más quieres practicar: trabajo, público, académico o personal.</span></div>
+      </div>
+      <div style="display: flex; gap: 16px; align-items: flex-start;">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">2</div>
+        <div><strong style="color: #1e293b;">Conversa con el personaje</strong><br><span style="font-size: 13px; color: #64748b;">Escribe o usa el micrófono. Tu mascota y la cámara miden tu estado emocional en tiempo real.</span></div>
+      </div>
+      <div style="display: flex; gap: 16px; align-items: flex-start;">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">3</div>
+        <div><strong style="color: #1e293b;">Recibe feedback personalizado</strong><br><span style="font-size: 13px; color: #64748b;">Al terminar, tu coach IA analiza la conversación y te da consejos específicos para mejorar.</span></div>
+      </div>
+    </div>
+    <p style="font-size: 13px; color: #94a3b8; margin-bottom: 16px;"><i class="fas fa-key"></i> Recuerda configurar tu API Key de Gemini en <strong>Ajustes</strong> antes de empezar.</p>
+    <button class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 16px;" onclick="closeTutorial()"><i class="fas fa-play-circle"></i> ¡Empezar!</button>
   </div>
 </div>
 
