@@ -1,4 +1,4 @@
-﻿// =========================================================================
+// =========================================================================
   // LOGICA PRINCIPAL DE LA APLICACIí“N Y CONEXIí“N CON EL LLM
   // =========================================================================
 
@@ -9,8 +9,11 @@
   
   // Instanciar el cliente LLM global
   const llmClient = new LLMClient('');
-
-  function updateGlobalScore() { fetch('/get_progress').then(res => res.json()).then(data => { let scoreLabel = document.getElementById('global-score'); if (!scoreLabel) return; if (!data || data.length === 0) { scoreLabel.innerText = '50 Pts'; return; } let total = 0; data.forEach(row => { total += parseInt(row.Stress) || 50; }); let avg = Math.round(total / data.length); scoreLabel.innerText = avg + ' Pts'; }).catch(e=>console.log(e)); }
+  let lastCoachFeedback = ""; // Almacena el feedback texto-plano para TTS
+  let lastChatEmotionDetected = 'neutral';
+  let lastCamEmotionDetected = 'neutral';
+  
+  function updateGlobalScore() { fetch('/get_progress?username=' + encodeURIComponent(currentUser)).then(res => res.json()).then(data => { let scoreLabel = document.getElementById('global-score'); if (!scoreLabel) return; if (!data || data.length === 0) { scoreLabel.innerText = '50 Pts'; return; } let total = 0; data.forEach(row => { total += parseInt(row.Stress) || 50; }); let avg = Math.round(total / data.length); scoreLabel.innerText = avg + ' Pts'; }).catch(e=>console.log(e)); }
 
   // Al cargar la página, verificar sesión y recuperar la API key si existe
   document.addEventListener("DOMContentLoaded", () => {
@@ -20,7 +23,7 @@
           // No hay usuario, mostrar login
           document.getElementById('sidebar-nav').style.display = 'none';
           document.getElementById('main-header').style.display = 'none';
-          showAuthView('view-login');
+          showAuthView('view-welcome');
           return;
       }
       
@@ -44,6 +47,16 @@
       updateGlobalScore(); // <--- Llamar al promedio del puntaje global al iniciar
       showView('view-home');
   });
+
+  // Función para iniciar la presentación y narración desde la pantalla de bienvenida
+  function startAppAndNarrate() {
+      // Transición manual a la vista de login dividida para no cortar el audio
+      document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+      document.getElementById('view-login').classList.add('active');
+      
+      // Reproducir voz
+      playNPCVoice("Bienvenido a Social Coach. Tu espacio seguro para entrenar habilidades sociales, manejar el estrés y recibir feedback personalizado. Ingresa tus datos para iniciar sesión.");
+  }
 
   // Guardar API Key desde Ajustes
   function saveApiKey() {
@@ -149,6 +162,8 @@
       
       // Reset Biometrí­a (Estrés) y UI de la Mascota
       currentStress = 50;
+      lastChatEmotionDetected = 'neutral';
+      lastCamEmotionDetected = 'neutral';
       updateStressUI();
       document.getElementById('dog').setAttribute('data-emotion', 'neutral');
       document.getElementById('dog-statusText').innerText = 'neutral';
@@ -204,6 +219,7 @@
               const detectedEmotion = emotionMatch[1].toLowerCase();
               const validEmotions = ['neutral', 'happy', 'sad', 'angry', 'fear', 'surprise', 'disgust'];
               if(validEmotions.includes(detectedEmotion)) {
+                  lastChatEmotionDetected = detectedEmotion;
                   let pointsChange = 0;
                   let dogEmotion = 'neutral';
                   
@@ -583,6 +599,18 @@
                   } else {
                       replyToSpeak = "¿Te sientes preparado para volver a la simulación? Di sí para continuar, o salir para volver al inicio.";
                   }
+              } else if (mode === 'results') {
+                  if (normText.includes("dime el feedback") || normText.includes("leer feedback") || normText.includes("leer el feedback") || normText.includes("feedback")) {
+                      if (lastCoachFeedback) {
+                          replyToSpeak = "Aquí tienes el feedback del coach: " + lastCoachFeedback;
+                      } else {
+                          replyToSpeak = "El feedback aún se está generando, o no hubo conversación suficiente.";
+                      }
+                  } else if (isListAction || isRepeatAction) {
+                      replyToSpeak = "Estás en Resultados. Puedes decir: dime el feedback, o volver.";
+                  } else {
+                      replyToSpeak = "Comandos disponibles: dime el feedback, o volver.";
+                  }
               } else if (mode === 'settings') {
                   if (normText.includes("noche") || normText.includes("nocturno") || normText.includes("oscuro") || normText.includes("claro")) {
                       replyToSpeak = "Cambiando tema visual.";
@@ -754,21 +782,30 @@
   function announceMenuContext(view) {
       if (!voiceModeEnabled) return;
       if(view === 'view-home') {
-          playNPCVoice("Elige una situación para practicar. Cada entorno presenta diferentes retos emocionales y sociales.");
+          let sNames = "";
+          if (typeof appData !== 'undefined' && appData.situaciones) {
+              sNames = " Tienes disponibles: " + appData.situaciones.map(s => s.titulo).join(", ") + ".";
+          }
+          playNPCVoice("Has entrado al Entorno de Simulación. Elige una situación para practicar." + sNames + " Puedes usar comandos de voz para entrar a la situación que desees.");
       } else if(view === 'view-characters' && currentSituation) {
-          playNPCVoice("Selecciona con qué personaje interactuar en " + currentSituation.titulo);
+          let cNames = currentSituation.personajes.map(p => p.nombre).join(", ");
+          playNPCVoice("Selecciona con qué personaje interactuar en " + currentSituation.titulo + ". Opciones: " + cNames + ". Puedes decir el nombre del personaje para seleccionarlo.");
       } else if(view === 'view-prep' && currentCharacter) {
           const contextoContextual = currentCharacter.prompt.split("REGLAS")[0].trim();
           playNPCVoice("Contexto: " + contextoContextual + " ... El objetivo es: " + document.getElementById('prep-objective').innerText + " ... ¿Estás listo para iniciar la simulación? Di sí para comenzar, o volver para elegir otro personaje.");
       } else if (view === 'view-pause') {
           playNPCVoice("Modo de pausa activa. Respira conmigo. ¿Te sientes preparado para volver? Di sí para continuar, o salir para abandonar.");
       } else if (view === 'view-settings') {
-          playNPCVoice("Panel de Configuración. Comandos de voz: modo noche, tamaño grande, normal o pequeño.");
+          playNPCVoice("Panel de Configuración. Comandos de voz disponibles: modo noche, tamaño grande, normal o pequeño.");
       } else if (view === 'view-meter') {
-          playNPCVoice("Historial de progreso. Puedes decir leer promedio.");
+          const scoreEl = document.getElementById('global-score');
+          const score = scoreEl ? scoreEl.innerText : "desconocido";
+          playNPCVoice("Historial de progreso. Tu rendimiento general actual es " + score + ". Elige una categoría de tu historial para revisar los detalles de tus simulaciones.");
       } else if (view === 'view-forum') {
           forumVoiceStep = null;
           playNPCVoice("Foro comunitario. Mantén presionado el micrófono y di nuevo post para crear una publicación, actualizar para recargar, o volver para salir.");
+      } else if (view === 'view-results') {
+          playNPCVoice("Resultados de la simulación. Puedes decir 'dime el feedback' para escuchar mis sugerencias, o 'volver' para salir al menú principal.");
       }
   }
 
@@ -810,6 +847,7 @@
                   const detectedEmotion = emotionMatch[1].toLowerCase();
                   const validEmotions = ['neutral', 'happy', 'sad', 'angry', 'fear', 'surprise', 'disgust'];
                   if(validEmotions.includes(detectedEmotion)) {
+                      lastChatEmotionDetected = detectedEmotion;
                       let pointsChange = 0; let dogEmotion = 'neutral';
                       switch(detectedEmotion) {
                           case 'angry': pointsChange = 20; dogEmotion = 'fear'; break;
@@ -893,7 +931,7 @@
       }
   }
 
-  function showSimulationResults() {
+  async function showSimulationResults() {
       // Detener cámara si estaba prendida
       stopCamera();
       
@@ -911,25 +949,75 @@
       const finalDogEmotion = document.getElementById('dog').getAttribute('data-emotion');
       document.getElementById('result-dog').setAttribute('data-emotion', finalDogEmotion);
       
-      // Guardar progreso en el backend
-      const lastChatEmotion = currentCharacter ? currentCharacter.emotion : 'neutral'; // Aproximación
-      const finalCameraEmotion = document.getElementById('sim-cam-emotion') ? document.getElementById('sim-cam-emotion').innerText : 'neutral';
+      // Guardar nombres antes de borrar la referencia
+      const situacionName = currentSituation ? currentSituation.titulo : "Situación Desconocida";
+      const personajeName = currentCharacter ? currentCharacter.nombre : "Personaje Desconocido";
+      const lastChatEmotion = lastChatEmotionDetected;
+      const finalCameraEmotion = lastCamEmotionDetected;
       
+      // Mostrar la vista y generar feedback
+      showView('view-results'); 
+      await generateCoachFeedback();
+      
+      // Guardar progreso en el backend con el feedback incluido
       fetch('/save_progress', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+              username: currentUser,
               chat_emotion: lastChatEmotion,
               camera_emotion: finalCameraEmotion,
               pet_emotion: finalDogEmotion,
-              stress: currentStress
+              stress: currentStress,
+              situacion: situacionName,
+              personaje: personajeName,
+              feedback: lastCoachFeedback
           })
       }).then(() => {
-          updateGlobalScore(); // <--- Actualizar el promedio si se guarda una nueva simulación
+          updateGlobalScore(); // Actualizar el promedio
       }).catch(err => console.error("Error al guardar progreso:", err));
 
       currentCharacter = null; 
-      showView('view-results'); 
+  }
+
+  async function generateCoachFeedback() {
+      const feedbackContainer = document.getElementById('coach-feedback-content');
+      const btnRead = document.getElementById('btn-read-feedback');
+      
+      feedbackContainer.innerHTML = `
+          <div style="text-align: center; color: #92400e;">
+              <i class="fas fa-circle-notch fa-spin" style="font-size: 24px; margin-bottom: 8px;"></i>
+              <p>Analizando la conversación para darte feedback...</p>
+          </div>
+      `;
+      btnRead.style.display = 'none';
+      lastCoachFeedback = "";
+
+      if (llmClient.conversationHistory.length === 0) {
+          feedbackContainer.innerHTML = "<p>No hubo interacción suficiente para generar feedback.</p>";
+          return;
+      }
+
+      try {
+          const coachClient = new LLMClient(llmClient.apiKey);
+          const formattedHistory = llmClient.conversationHistory.map(h => `${h.role === 'user' ? 'Usuario' : 'Personaje'}: ${h.parts[0].text}`).join("\\n");
+          const coachPrompt = "Eres un coach experto en habilidades sociales. Analiza la siguiente conversación y proporciona 2 sugerencias breves, amables y constructivas sobre cómo el usuario podría mejorar su comunicación, empatía o asertividad. Formatea tu respuesta en HTML usando <ul> y <li>.";
+          const message = `Conversación:\\n${formattedHistory}`;
+          
+          let feedback = await coachClient.chat(message, coachPrompt, 0.7);
+          
+          // Limpiar tags de emoción por si el modelo los devuelve
+          feedback = feedback.replace(/\\[USER_EMOTION:.*?\\]/gi, '').trim();
+          
+          lastCoachFeedback = feedback.replace(/<[^>]+>/g, ''); // Limpiar tags HTML para TTS
+          feedbackContainer.innerHTML = feedback;
+          
+          if (voiceModeEnabled) {
+              btnRead.style.display = 'block';
+          }
+      } catch (err) {
+          feedbackContainer.innerHTML = `<p style="color: red;">Error al generar feedback: ${err.message}</p>`;
+      }
   }
 
   // =========================================================================
@@ -1052,6 +1140,7 @@
           
           const validEmotions = ['neutral', 'happy', 'sad', 'angry', 'fear', 'surprise', 'disgust'];
           if(validEmotions.includes(data.emotion)) {
+              lastCamEmotionDetected = data.emotion;
               setEmotion(data.emotion);
           }
 
@@ -1080,33 +1169,97 @@
   }
 
   function loadProgress() {
-      const tbody = document.getElementById('progress-table-body');
-      tbody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center;">Cargando...</td></tr>';
+      const container = document.getElementById('progress-container');
+      container.innerHTML = '<div style="padding: 20px; text-align: center;">Cargando historial...</div>';
       
-      fetch('/get_progress')
+      fetch('/get_progress?username=' + encodeURIComponent(currentUser))
         .then(res => res.json())
         .then(data => {
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center;">Aún no hay historial de progreso. ¡Empieza una simulación!</td></tr>';
+                container.innerHTML = '<div style="padding: 20px; text-align: center;">Aún no hay historial de progreso. ¡Empieza una simulación!</div>';
                 return;
             }
-            tbody.innerHTML = '';
+            
+            // Agrupar por situación
+            const grouped = {};
             data.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.style.borderBottom = "1px solid var(--border-color)";
-                tr.innerHTML = `
-                    <td style="padding: 12px;">${row.Fecha_Hora}</td>
-                    <td style="padding: 12px; text-transform: capitalize;">${row.Emocion_Chat}</td>
-                    <td style="padding: 12px; text-transform: capitalize;">${row.Emocion_Camara}</td>
-                    <td style="padding: 12px; text-transform: capitalize;">${row.Emocion_Mascota}</td>
-                    <td style="padding: 12px;"><strong>${row.Stress}/100</strong></td>
-                `;
-                tbody.appendChild(tr);
+                const sit = row.Situacion || "Situación Desconocida";
+                if (!grouped[sit]) grouped[sit] = [];
+                grouped[sit].push(row);
             });
+            
+            container.innerHTML = '';
+            
+            for (const sit in grouped) {
+                const records = grouped[sit];
+                let totalStress = 0;
+                records.forEach(r => { totalStress += parseInt(r.Stress) || 50; });
+                const avgStress = Math.round(totalStress / records.length);
+                const performance = 100 - avgStress;
+                
+                let perfIcon = "fa-smile-beam";
+                let perfColor = "#16a34a"; // Green
+                if (performance < 40) { perfIcon = "fa-frown"; perfColor = "#dc2626"; } // Red
+                else if (performance < 70) { perfIcon = "fa-meh"; perfColor = "#d97706"; } // Yellow
+                
+                // Generar HTML del acordeón
+                const accId = 'acc-' + Math.random().toString(36).substr(2, 9);
+                
+                let recordsHtml = '';
+                // Mostrar del más reciente al más antiguo
+                records.slice().reverse().forEach(row => {
+                    const personaje = row.Personaje || "Desconocido";
+                    let feedbackHtml = '';
+                    if (row.Feedback && row.Feedback.trim() !== '') {
+                        feedbackHtml = `
+                            <div style="margin-top: 12px; padding: 12px; background: #fffbeb; border-left: 3px solid #fcd34d; font-size: 14px; border-radius: 0 6px 6px 0;">
+                                <strong><i class="fas fa-chalkboard-teacher"></i> Feedback recibido:</strong>
+                                <div style="margin-top: 8px;">${row.Feedback}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    recordsHtml += `
+                        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; background: white;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 10px;">
+                                <div style="font-weight: bold; color: var(--primary);"><i class="fas fa-user-circle"></i> ${personaje}</div>
+                                <div style="font-size: 12px; color: #64748b;"><i class="fas fa-calendar-alt"></i> ${row.Fecha_Hora}</div>
+                            </div>
+                            <div style="display: flex; gap: 15px; font-size: 13px; color: #475569; flex-wrap: wrap;">
+                                <span><strong>Estrés:</strong> ${row.Stress}/100</span>
+                                <span><strong>Cámara:</strong> ${row.Emocion_Camara}</span>
+                                <span><strong>Chat:</strong> ${row.Emocion_Chat}</span>
+                                <span><strong>Mascota:</strong> ${row.Emocion_Mascota}</span>
+                            </div>
+                            ${feedbackHtml}
+                        </div>
+                    `;
+                });
+                
+                const section = document.createElement('div');
+                section.style.marginBottom = "16px";
+                section.innerHTML = `
+                    <div onclick="const el = document.getElementById('${accId}'); el.style.display = el.style.display === 'none' ? 'block' : 'none'" 
+                         style="background: var(--bg-card); padding: 16px 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid ${perfColor}; transition: transform 0.2s;">
+                        <div>
+                            <h3 style="margin: 0; font-size: 18px; color: var(--text-color);">${sit}</h3>
+                            <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">${records.length} interacción(es) registrada(s)</p>
+                        </div>
+                        <div style="text-align: right; color: ${perfColor};">
+                            <div style="font-size: 22px; font-weight: bold;"><i class="fas ${perfIcon}"></i> ${performance}%</div>
+                            <div style="font-size: 11px; text-transform: uppercase;">Rendimiento</div>
+                        </div>
+                    </div>
+                    <div id="${accId}" style="display: none; padding: 16px 0 0 16px; border-left: 2px dashed #cbd5e1; margin-left: 10px;">
+                        ${recordsHtml}
+                    </div>
+                `;
+                container.appendChild(section);
+            }
         })
         .catch(err => {
             console.error(err);
-            tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: red;">Error al cargar progreso.</td></tr>`;
+            container.innerHTML = `<div style="padding: 20px; text-align: center; color: red;">Error al cargar progreso.</div>`;
         });
   }
 

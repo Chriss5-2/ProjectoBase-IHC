@@ -228,28 +228,62 @@ def save_progress():
     data = request.json
     file_exists = os.path.isfile(PROGRESS_FILE)
     
+    needs_header = not file_exists
+    if file_exists:
+        with open(PROGRESS_FILE, mode='r', encoding='utf-8-sig') as f:
+            first_line = f.readline().strip()
+            if 'Username' not in first_line:
+                needs_header = True
+                
+    if needs_header:
+        old_data = []
+        if file_exists:
+            with open(PROGRESS_FILE, mode='r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f)
+                old_data = list(reader)
+                
+        with open(PROGRESS_FILE, mode='w', newline='', encoding='utf-8-sig') as f:
+            writer = csv.writer(f)
+            writer.writerow(['Username', 'Fecha_Hora', 'Emocion_Chat', 'Emocion_Camara', 'Emocion_Mascota', 'Stress', 'Situacion', 'Personaje', 'Feedback'])
+            for row in old_data:
+                writer.writerow([
+                    row.get('Username', 'edy'),
+                    row.get('Fecha_Hora', ''),
+                    row.get('Emocion_Chat', 'neutral'),
+                    row.get('Emocion_Camara', 'neutral'),
+                    row.get('Emocion_Mascota', 'neutral'),
+                    row.get('Stress', '50'),
+                    row.get('Situacion', 'Situación Desconocida'),
+                    row.get('Personaje', 'Personaje Desconocido'),
+                    row.get('Feedback', '')
+                ])
+                
     with open(PROGRESS_FILE, mode='a', newline='', encoding='utf-8-sig') as f:
         writer = csv.writer(f)
-        if not file_exists:
-            writer.writerow(['Fecha_Hora', 'Emocion_Chat', 'Emocion_Camara', 'Emocion_Mascota', 'Stress'])
         writer.writerow([
+            data.get('username', 'Desconocido'),
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             data.get('chat_emotion', 'neutral'),
             data.get('camera_emotion', 'neutral'),
             data.get('pet_emotion', 'neutral'),
-            data.get('stress', '50')
+            data.get('stress', '50'),
+            data.get('situacion', 'Situación Desconocida'),
+            data.get('personaje', 'Personaje Desconocido'),
+            data.get('feedback', '')
         ])
     return jsonify({"status": "success"})
 
 @app.route('/get_progress')
 def get_progress():
+    username = request.args.get('username')
     if not os.path.isfile(PROGRESS_FILE):
         return jsonify([])
     results = []
     with open(PROGRESS_FILE, mode='r', encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
         for row in reader:
-            results.append(row)
+            if not username or row.get('Username') == username:
+                results.append(row)
     return jsonify(results)
 
 # Rutas para TTS y STT usando gTTS y SpeechRecognition
